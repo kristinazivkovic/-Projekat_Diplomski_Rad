@@ -1,0 +1,118 @@
+\xpg@aux {}{serbian}
+\contentsline {chapter}{Апстракт}{}{chapter*.1}%
+\contentsline {chapter}{\numberline {1}Увод}{1}{chapter.1}%
+\contentsline {section}{\numberline {1.1}Циљ рада}{2}{section.1.1}%
+\contentsline {section}{\numberline {1.2}Методологија}{3}{section.1.2}%
+\contentsline {section}{\numberline {1.3}Хипотезе}{4}{section.1.3}%
+\contentsline {section}{\numberline {1.4}Структура рада}{5}{section.1.4}%
+\contentsline {chapter}{\numberline {2}Теоријске основе}{6}{chapter.2}%
+\contentsline {section}{\numberline {2.1}Реализована волатилност као изведена величина}{6}{section.2.1}%
+\contentsline {subsection}{\numberline {2.1.1}Полазни модел цене}{6}{subsection.2.1.1}%
+\contentsline {subsection}{\numberline {2.1.2}Реализована варијанса}{7}{subsection.2.1.2}%
+\contentsline {subsection}{\numberline {2.1.3}Реализована квартичност}{7}{subsection.2.1.3}%
+\contentsline {subsection}{\numberline {2.1.4}Семиваријансе са предзнаком}{8}{subsection.2.1.4}%
+\contentsline {section}{\numberline {2.2}Први експериментални фактор: Дизајн мерења}{8}{section.2.2}%
+\contentsline {paragraph}{Зашто су експериментална фактора два, а не четири.}{8}{paragraph*.3}%
+\contentsline {subsection}{\numberline {2.2.1}Димензија А1 — фреквенција узорковања}{9}{subsection.2.2.1}%
+\contentsline {subsection}{\numberline {2.2.2}Димензија А2 — естиматори отпорни на скокове}{10}{subsection.2.2.2}%
+\contentsline {paragraph}{Биповер варијација (BPV).}{10}{paragraph*.5}%
+\contentsline {paragraph}{Медијална реализована варијанса (MedRV).}{11}{paragraph*.6}%
+\contentsline {paragraph}{Биповер варијација са прагом (TrBPV).}{11}{paragraph*.7}%
+\contentsline {subsection}{\numberline {2.2.3}Димензија А3 — тестови за детекцију скокова}{12}{subsection.2.2.3}%
+\contentsline {paragraph}{Наивни праг.}{12}{paragraph*.8}%
+\contentsline {paragraph}{БНС тест.}{12}{paragraph*.9}%
+\contentsline {paragraph}{Ли-Микландов тест.}{13}{paragraph*.10}%
+\contentsline {paragraph}{Ли-Микланд са контролом стопе лажних открића.}{14}{paragraph*.11}%
+\contentsline {subsection}{\numberline {2.2.4}Условна декомпозиција на континуирану и скоковиту компоненту}{14}{subsection.2.2.4}%
+\contentsline {subsection}{\numberline {2.2.5}Простор дизајна мерења}{15}{subsection.2.2.5}%
+\contentsline {section}{\numberline {2.3}Изведене променљиве као улаз модела}{16}{section.2.3}%
+\contentsline {subsection}{\numberline {2.3.1}HAR агрегати}{16}{subsection.2.3.1}%
+\contentsline {subsection}{\numberline {2.3.2}Преглед скупа изведених променљивих}{16}{subsection.2.3.2}%
+\contentsline {section}{\numberline {2.4}Други експериментални фактор: Архитектуре предиктивних модела}{17}{section.2.4}%
+\contentsline {subsection}{\numberline {2.4.1}Конструкција циљне променљиве}{17}{subsection.2.4.1}%
+\contentsline {subsection}{\numberline {2.4.2}Проблем повратне трансформације и Јенсенова неједнакост}{17}{subsection.2.4.2}%
+\contentsline {subsection}{\numberline {2.4.3}Три различита механизма позитивности}{19}{subsection.2.4.3}%
+\contentsline {subsection}{\numberline {2.4.4}HAR модел и његове варијанте}{19}{subsection.2.4.4}%
+\contentsline {paragraph}{Полазна интуиција.}{19}{paragraph*.14}%
+\contentsline {paragraph}{Логаритамски HAR.}{19}{paragraph*.15}%
+\contentsline {paragraph}{HAR у нивоима са ненегативним најмањим квадратима.}{19}{paragraph*.16}%
+\contentsline {paragraph}{CHAR.}{20}{paragraph*.17}%
+\contentsline {paragraph}{HAR-J.}{20}{paragraph*.18}%
+\contentsline {paragraph}{SHAR.}{20}{paragraph*.19}%
+\contentsline {paragraph}{HAR-IV.}{20}{paragraph*.20}%
+\contentsline {subsection}{\numberline {2.4.5}HARQ — модел изграђен на грешци мерења}{21}{subsection.2.4.5}%
+\contentsline {subsection}{\numberline {2.4.6}ARFIMA — експлицитно дугорочно памћење}{21}{subsection.2.4.6}%
+\contentsline {subsection}{\numberline {2.4.7}MEM — мултипликативни модел грешке}{22}{subsection.2.4.7}%
+\contentsline {subsection}{\numberline {2.4.8}Модели засновани на стаблима}{23}{subsection.2.4.8}%
+\contentsline {paragraph}{Градијентно појачавање.}{23}{paragraph*.21}%
+\contentsline {subsection}{\numberline {2.4.9}PatchTST — трансформерска архитектура}{24}{subsection.2.4.9}%
+\contentsline {paragraph}{Сегментација на закрпе.}{24}{paragraph*.22}%
+\contentsline {paragraph}{Механизам пажње.}{25}{paragraph*.23}%
+\contentsline {paragraph}{Независност канала.}{25}{paragraph*.24}%
+\contentsline {subsection}{\numberline {2.4.10}Темељни модели временских серија}{25}{subsection.2.4.10}%
+\contentsline {section}{\numberline {2.5}Валидациони протокол}{26}{section.2.5}%
+\contentsline {subsection}{\numberline {2.5.1}Усидрена унапредна валидација}{26}{subsection.2.5.1}%
+\contentsline {subsection}{\numberline {2.5.2}Валидациони преклоп}{27}{subsection.2.5.2}%
+\contentsline {subsection}{\numberline {2.5.3}Обрада стохастичких модела}{27}{subsection.2.5.3}%
+\contentsline {section}{\numberline {2.6}Евалуација}{28}{section.2.6}%
+\contentsline {subsection}{\numberline {2.6.1}Ниво 1 — тачност прогнозе}{28}{subsection.2.6.1}%
+\contentsline {paragraph}{Фундаментални проблем.}{28}{paragraph*.26}%
+\contentsline {paragraph}{QLIKE (примарна метрика).}{28}{paragraph*.27}%
+\contentsline {paragraph}{RMSE (секундарна).}{28}{paragraph*.28}%
+\contentsline {paragraph}{MAE (додатна).}{28}{paragraph*.29}%
+\contentsline {paragraph}{Релативни QLIKE.}{29}{paragraph*.30}%
+\contentsline {subsection}{\numberline {2.6.2}Ниво 2 — статистичка значајност}{29}{subsection.2.6.2}%
+\contentsline {paragraph}{Дибold-Маријанов тест.}{29}{paragraph*.31}%
+\contentsline {paragraph}{Контрола вишеструког тестирања.}{30}{paragraph*.32}%
+\contentsline {paragraph}{Скуп поверења модела.}{30}{paragraph*.33}%
+\contentsline {subsection}{\numberline {2.6.3}Ниво 2 — декомпозиција варијансе}{30}{subsection.2.6.3}%
+\contentsline {paragraph}{1. Оцењивање по хоризонту, никада обједињено.}{31}{paragraph*.34}%
+\contentsline {paragraph}{2. Симбол као експлицитан блокирајући фактор.}{31}{paragraph*.35}%
+\contentsline {paragraph}{3. Сума квадрата типа III са сум-то-зеро контрастима.}{31}{paragraph*.36}%
+\contentsline {paragraph}{4. Интеракциони чланови су структурни, а не случајни.}{31}{paragraph*.37}%
+\contentsline {paragraph}{Ограничење које мора бити наведено у тексту рада.}{31}{paragraph*.38}%
+\contentsline {paragraph}{Робусност на асиметрију је обавезна, а не опциона.}{32}{paragraph*.39}%
+\contentsline {subsection}{\numberline {2.6.4}Минцер-Зарновиц регресија}{32}{subsection.2.6.4}%
+\contentsline {subsection}{\numberline {2.6.5}Ниво 3 — економска евалуација}{33}{subsection.2.6.5}%
+\contentsline {paragraph}{Кључно методолошко усклађивање.}{33}{paragraph*.41}%
+\contentsline {paragraph}{Купијецов тест безусловне покривености.}{33}{paragraph*.42}%
+\contentsline {paragraph}{Кристоферсенов тест независности.}{33}{paragraph*.43}%
+\contentsline {paragraph}{Динамички квантилни тест.}{34}{paragraph*.44}%
+\contentsline {paragraph}{Лопезова функција губитка.}{34}{paragraph*.45}%
+\contentsline {subsection}{\numberline {2.6.6}Ниво 4 — карактеризација детекције скокова}{34}{subsection.2.6.6}%
+\contentsline {paragraph}{Методолошка напомена.}{34}{paragraph*.46}%
+\contentsline {paragraph}{Жакаров индекс преклапања.}{34}{paragraph*.47}%
+\contentsline {paragraph}{Удео дана са скоком.}{35}{paragraph*.48}%
+\contentsline {paragraph}{Удео скоковите компоненте у укупној варијанси.}{35}{paragraph*.49}%
+\contentsline {paragraph}{Плацебо тест.}{35}{paragraph*.50}%
+\contentsline {subsection}{\numberline {2.6.7}Стратификација резултата}{35}{subsection.2.6.7}%
+\contentsline {section}{\numberline {2.7}Празнина у постојећој литератури}{36}{section.2.7}%
+\contentsline {section}{\numberline {2.8}Синтеза теоријског оквира}{36}{section.2.8}%
+\contentsline {chapter}{\numberline {3}Методологија}{38}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Преглед истраживачког поступка}{38}{section.3.1}%
+\contentsline {section}{\numberline {3.2}Подаци}{39}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Извор података}{39}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Узорак}{39}{subsection.3.2.2}%
+\contentsline {subsection}{\numberline {3.2.3}Чишћење и контрола квалитета}{40}{subsection.3.2.3}%
+\contentsline {subsection}{\numberline {3.2.4}Конструкција панела}{41}{subsection.3.2.4}%
+\contentsline {section}{\numberline {3.3}Дизајн експеримента}{41}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Фактори и нивои}{41}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Свођење рачунског обима}{41}{subsection.3.3.2}%
+\contentsline {subsection}{\numberline {3.3.3}Фиксирани параметри}{42}{subsection.3.3.3}%
+\contentsline {subsection}{\numberline {3.3.4}Ток једног валидационог прозора}{44}{subsection.3.3.4}%
+\contentsline {subsection}{\numberline {3.3.5}Провера контаминације предтренирања}{44}{subsection.3.3.5}%
+\contentsline {section}{\numberline {3.4}Мере}{44}{section.3.4}%
+\contentsline {paragraph}{Примарне мере.}{44}{paragraph*.55}%
+\contentsline {paragraph}{Секундарне мере.}{45}{paragraph*.56}%
+\contentsline {paragraph}{Дијагностичке мере.}{45}{paragraph*.57}%
+\contentsline {section}{\numberline {3.5}Правила искључивања}{45}{section.3.5}%
+\contentsline {section}{\numberline {3.6}Статистичка анализа}{46}{section.3.6}%
+\contentsline {paragraph}{Х1 --- доприноси ли информација о скоковима тачности.}{46}{paragraph*.58}%
+\contentsline {paragraph}{Х2 --- јача ли ефекат на краћем хоризонту.}{46}{paragraph*.59}%
+\contentsline {paragraph}{Х3 --- колики је удео дизајна мерења у односу на избор модела.}{46}{paragraph*.60}%
+\contentsline {paragraph}{Х4 --- мења ли се рангирање при преласку на економску меру.}{46}{paragraph*.61}%
+\contentsline {paragraph}{Х5 --- опстаје ли побољшање уз насумично пермутоване индикаторе скокова.}{46}{paragraph*.62}%
+\contentsline {subsection}{\numberline {3.6.1}Робусност}{46}{subsection.3.6.1}%
+\contentsline {section}{\numberline {3.7}Рачунско окружење и поновљивост}{47}{section.3.7}%
+\contentsline {section}{\numberline {3.8}Ограничења методологије}{47}{section.3.8}%
+\contentsline {chapter}{ЛИТЕРАТУРА}{49}{chapter*.63}%

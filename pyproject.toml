@@ -1,0 +1,39 @@
+[project]
+name = "projekat"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Kristina", email = "kristina.zivkovic02@gmail.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "certifi>=2026.7.22",
+    "lse-data[frames]>=0.14.0",
+    "pandas>=2.2.0,<3.0.0",           # Downgraded cap: required for granite-tsfm
+    "python-dotenv>=1.2.3",
+    "pyarrow>=18.0.0",
+    "numpy>=2.0.0",
+    "scipy>=1.14.0",
+    "exchange-calendars>=4.13.2",
+    "lightgbm>=4.7.0",
+    "xgboost>=3.4.1",
+    "torch>=2.10,<2.12",              # Lowered: capped by granite-tsfm's own published torch<2.12 requirement
+    "scikit-learn>=1.7.0,<1.8",       # Lowered: capped by granite-tsfm's own published scikit-learn<1.8 requirement
+    "statsmodels>=0.15.0",
+    "transformers[torch]>=4.57.6,<5", # Lowered: capped by granite-tsfm's own published transformers<5 requirement
+    "accelerate>=1.0.0",              # Added: required by transformers/granite-tsfm
+    "einops>=0.8.0",
+    "huggingface-hub>=0.34.0,<1.0",   # Lowered: capped by transformers==4.57.6's own huggingface-hub<1.0 requirement
+    "granite-tsfm[notebooks]>=0.3.3",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+]
+
+
+[build-system]
+requires = ["uv_build>=0.12.11,<0.13.0"]
+build-backend = "uv_build"

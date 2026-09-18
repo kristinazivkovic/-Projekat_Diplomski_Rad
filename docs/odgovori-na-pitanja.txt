@@ -1,0 +1,56 @@
+Subject: Diplomski rad — koncept istraživanja
+
+Poštovani profesore,
+
+u nastavku su odgovori na pitanja sa konsultacija.
+
+1. IZLAZ KOJI SE PREDVIĐA
+
+Dnevna realizovana volatilnost (RV), modelovana u logaritamskoj skali radi stabilnosti, uz vraćanje u originalnu skalu pri evaluaciji. Predviđanje se radi na tri horizonta: h = 1, 5 i 22 dana.
+
+RV se ne preuzima gotova, nego se računa iz intradnevnih podataka kao suma kvadriranih log-prinosa unutar dana. To je bitno jer je sam način računanja jedna od eksperimentalnih dimenzija rada.
+
+2. MODELI
+
+Jedanaest modela u pet grupa:
+
+- Referentni: naivni model, RV(t) = RV(t-1)
+- Ekonometrijski: HAR, HAR-J, CHAR, SHAR, HARQ, HAR-IV
+- Ansambli stabala: LightGBM, XGBoost
+- Rekurentni: LSTM
+- Transformerski: PatchTST
+
+3. ULAZI PO MODELU
+
+- Naivni: RV(t-1)
+- HAR: RV juče, prosek prethodnih 5 dana, prosek prethodnih 22 dana
+- CHAR: iste tri komponente, ali samo kontinuirani deo (bez skokova)
+- HAR-J: kontinuirani deo (tri komponente) + skokovita komponenta
+- SHAR: pozitivna i negativna semivarijansa + nedeljna i mesečna komponenta
+- HARQ: HAR komponente + interakcija dnevnog RV sa realizovanom kvartičnošću
+- HAR-IV: HAR komponente + VIX sa docnjom od jednog dana
+- LightGBM i XGBoost: unija svih navedenih promenljivih
+- LSTM i PatchTST: sekvenca prethodnih 60 dana (RV, kontinuirana i skokovita komponenta, semivarijanse)
+
+4. MERE USPEŠNOSTI
+
+Primarna metrika je QLIKE, jer je Patton (2011) pokazao da većina funkcija gubitka daje pogrešno rangiranje modela kada je proxy za volatilnost šumovit, a RV to jeste. QLIKE dodatno asimetrično kažnjava potcenjivanje rizika. Uz nju se prijavljuju RMSE i MAE radi uporedivosti sa literaturom.
+
+Za značajnost razlika: Diebold-Mariano test i Model Confidence Set.
+
+Za ekonomsku proveru: prognoza se prevodi u Value at Risk (nivoi 1% i 5%), koji se testira Kupiecovim i Christoffersenovim testom.
+
+Sve metrike se računaju stratifikovano, odvojeno za mirne i turbulentne periode i za dane sa skokom.
+
+5. KONCEPCIJA EKSPERIMENTA
+
+- Podaci: intradnevne cene, period 2010-2025 (15 godina)
+- Uzorak: panel od 20 do 30 pojedinačnih akcija plus indeks; jedan evropski indeks kao provera robustnosti
+- Validacija: anchored walk-forward. Početni trening obuhvata 5 godina, testira se na narednoj godini, zatim se trening prozor proširuje i postupak ponavlja, ukupno oko 10 prozora
+- Ponavljanja: modeli sa stohastičkim treningom (LSTM, PatchTST) pokreću se sa 5 različitih random seed-ova, uz prijavljivanje srednje vrednosti i standardne devijacije
+
+Podela je isključivo vremenska, bez nasumičnog uzorkovanja, čime se izbegava svaki oblik curenja informacija iz budućnosti.
+
+Stojim na raspolaganju za dodatna pojašnjenja.
+
+Srdačan pozdrav,

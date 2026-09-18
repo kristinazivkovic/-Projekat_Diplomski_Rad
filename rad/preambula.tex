@@ -1,0 +1,170 @@
+% ============================================================
+%  Преамбула — заједничка подешавања за цео рад
+%  Компајлира се искључиво са XeLaTeX (због fontspec/unicode-math)
+% ============================================================
+
+% ── језик и фонтови ─────────────────────────────────────────
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{serbian}
+\setmainfont{Times New Roman}
+
+% Моноспејс фонт мора да садржи ћирилицу (подразумевани Latin Modern Mono
+% је нема, што polyglossia пријављује као грешку код \texttt{...}).
+\setmonofont{Consolas}[Scale=0.92]
+
+% ── математика ──────────────────────────────────────────────
+% ВАЖНО: amsmath иде ПРЕ unicode-math, а amssymb се НЕ учитава --
+% unicode-math већ дефинише све те симболе, па би amssymb изазвао
+% сукоб („Command \eth already defined“).
+\usepackage{amsmath}
+\usepackage{unicode-math}
+\setmathfont{Cambria Math}
+\allowdisplaybreaks          % дозволи прелом вишередних формула преко стране
+
+% ── распоред стране ─────────────────────────────────────────
+% Маргине по шаблону ФОН-а: горња, доња и десна 2,5 цм; лева 3,1 цм.
+\usepackage[a4paper,left=3.1cm,right=2.5cm,top=2.5cm,bottom=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing               % проред између редова 1,5
+
+% Проред параграфа по шаблону ФОН-а: 12pt пре и 6pt након параграфа.
+% Word сажима суседне размаке на ВЕЋИ од та два (12pt), не на њихов
+% збир, па је 12pt тачан еквивалент. LaTeX има само један размак
+% између параграфа (\parskip), па се он поставља на 12pt.
+% Растезање (plus/minus) намерно је нула: без тога LaTeX додатно
+% развлачи размаке да попуни страну, што ствара неуједначене празнине.
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{12pt}
+
+% Обострано поравнање је подразумевано у LaTeX-у; овде се само
+% ублажава превише агресивно растезање речи.
+\usepackage{microtype}
+
+% ── уједначавање вертикалних размака ────────────────────────
+% Пошто је \parskip постављен на 12pt, LaTeX-ови подразумевани
+% размаци око набрајања, формула и наслова СЕ ДОДАЈУ на њега и
+% стварају видљиве празне редове. Зато се сви експлицитно своде
+% на исти размак од 12pt, тако да документ има један једини
+% вертикални ритам.
+
+% Набрајања (itemize, enumerate, description)
+\usepackage{enumitem}
+\setlist{
+  topsep    = 0pt,     % изнад/испод целе листе — наслеђује \parskip
+  partopsep = 0pt,
+  parsep    = 0pt,
+  itemsep   = 6pt,     % између ставки: пола размака параграфа
+  listparindent = 0pt
+}
+
+% Формуле: amsmath подразумевано додаје сопствени размак изнад и
+% испод, који се сабира са \parskip. Своди се на исту вредност.
+% Поставља се кроз \AtBeginDocument јер amsmath своје вредности
+% дефинише при учитавању величине фонта и прегазио би ранију поставку.
+% Формула је наставак реченице која јој претходи, а не нов параграф,
+% па добија 6pt — пола размака параграфа. Са 12pt би изгледала као
+% да је одвојена празним редом, што је управо оно што се избегава.
+\AtBeginDocument{%
+  \setlength{\abovedisplayskip}{6pt}%
+  \setlength{\belowdisplayskip}{6pt}%
+  \setlength{\abovedisplayshortskip}{6pt}%
+  \setlength{\belowdisplayshortskip}{6pt}%
+}
+
+% Плутајући објекти (табеле): размак изнад и испод натписа и
+% између објекта и текста.
+\setlength{\textfloatsep}{12pt}
+\setlength{\floatsep}{12pt}
+\setlength{\intextsep}{12pt}
+\setlength{\abovecaptionskip}{6pt}
+\setlength{\belowcaptionskip}{6pt}
+
+% ── табеле ──────────────────────────────────────────────────
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+
+% ── наслови по шаблону ФОН-а ────────────────────────────────
+% Ниво 1: СВИМ ВЕЛИКИМ СЛОВИМА, фонт 14, затамњено.
+% Ниво 2: СВИМ ВЕЛИКИМ СЛОВИМА, фонт 14 (без задебљања).
+% Ниво 3: малим словима, фонт 14.
+% Поглавља се не преламају на нову страну (шаблон нема преломе),
+% па се користи \chapter* логика преко titlesec-а без \clearpage.
+\usepackage{titlesec}
+
+% Размак ИСПОД наслова постављен је на 0pt, а не на 6pt: \parskip од
+% 12pt већ увлачи размак пре првог параграфа иза наслова, па би 6pt
+% на то дало 18pt и видљиву празнину. Размак ИЗНАД наслова је 6pt,
+% што уз \parskip претходног параграфа даје укупно 18pt раздвајања
+% између претходног текста и новог наслова.
+\titleformat{\chapter}[hang]
+  {\fontsize{14}{17}\selectfont\bfseries\MakeUppercase}
+  {\thechapter}{1em}{}
+\titlespacing*{\chapter}{0pt}{0pt}{0pt}
+
+\titleformat{\section}[hang]
+  {\fontsize{14}{17}\selectfont\MakeUppercase}
+  {\thesection}{1em}{}
+\titlespacing*{\section}{0pt}{6pt}{0pt}
+
+\titleformat{\subsection}[hang]
+  {\fontsize{14}{17}\selectfont}
+  {\thesubsection}{1em}{}
+\titlespacing*{\subsection}{0pt}{6pt}{0pt}
+
+% \paragraph се користи за истакнуте поднаслове у тексту (нпр. „Х1 --- ...“).
+% Мора остати у истом реду са текстом који следи, без додатног размака.
+\titleformat{\paragraph}[runin]
+  {\normalfont\bfseries}{}{0pt}{}
+\titlespacing*{\paragraph}{0pt}{0pt}{1em}
+
+% Поглавље почиње на новој страни, али без празне стране између
+% (oneside документ то и иначе поштује).
+\let\originalchapter\chapter
+
+% ── референце и хипервезе ───────────────────────────────────
+\usepackage[hidelinks]{hyperref}
+\usepackage{caption}
+
+% Натписи по шаблону ФОН-а: „Табела 1: ...“ изнад табеле,
+% „Слика 1. ...“ испод слике. Фонт исти као у остатку рада (12).
+\captionsetup{font=normalsize,labelfont=bf,labelsep=period}
+\captionsetup[table]{labelsep=colon,justification=raggedright,singlelinecheck=false}
+\captionsetup[figure]{justification=centering}
+\addto\captionsserbian{%
+  \renewcommand{\tablename}{Табела}%
+  \renewcommand{\figurename}{Слика}%
+}
+
+% ── непрекидна нумерација (1), (2), (3)... по шаблону ───────
+% Шаблон приказује формуле нумерисане просто бројем у загради,
+% а табеле и слике редним бројем кроз цео рад — не по поглављу.
+% Зато се \numberwithin НЕ користи: подразумевана нумерација у
+% класи report јесте по поглављу, па се експлицитно враћа на
+% непрекидну.
+\counterwithout{equation}{chapter}
+\counterwithout{table}{chapter}
+\counterwithout{figure}{chapter}
+
+% ── скраћенице које се често понављају ──────────────────────
+\newcommand{\RV}{\mathit{RV}}
+\newcommand{\RQ}{\mathit{RQ}}
+\newcommand{\BPV}{\mathit{BPV}}
+\newcommand{\MedRV}{\mathit{MedRV}}
+\newcommand{\TrBPV}{\mathit{TrBPV}}
+\newcommand{\TPQ}{\mathit{TPQ}}
+\newcommand{\RS}{\mathit{RS}}
+\newcommand{\SJ}{\mathit{SJ}}
+\newcommand{\QV}{\mathit{QV}}
+\newcommand{\QLIKE}{\mathit{QLIKE}}
+\newcommand{\RMSE}{\mathit{RMSE}}
+\newcommand{\MAE}{\mathit{MAE}}
+\newcommand{\VaR}{\mathit{VaR}}
+\newcommand{\DM}{\mathit{DM}}
+\newcommand{\BIC}{\mathit{BIC}}
+\newcommand{\VIX}{\mathit{VIX}}
+\newcommand{\Hit}{\mathit{Hit}}
+\newcommand{\med}{\operatorname{med}}
