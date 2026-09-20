@@ -30,6 +30,17 @@ PANEL_SCHEMA: dict[str, str] = {
     "C_d": "float64", "C_w": "float64", "C_m": "float64",
     "J_d": "float64", "J_w": "float64", "J_m": "float64",
 
+    # Ocena integrisane varijanse ocenjivačem otpornim na skokove (A2) tog
+    # dizajna -- BPV/MedRV/TrBPV vrednost dana. NIJE karakteristika nijednog
+    # modela; čuva se da bi dekompozicija bila REPRODUKUJUĆA iz samog panela:
+    # J_d = 1{jump_flag} * max(RV_d - IV_d, 0), C_d = RV_d - J_d
+    # (measure/decompose.py). Bez nje se IV ne može rekonstruisati na danima
+    # bez skoka (tamo je J_d = 0 bez obzira na IV), pa se ni dekompozicija ne
+    # može ponovo izvesti -- što treba H5 placebo testu, koji permutuje samo
+    # INDIKATOR skoka i iz njega iznova računa J i C
+    # (evaluation/diagnostics.py::h5_placebo_panel).
+    "IV_d": "float64",
+
     "jump_flag": "boolean",         # značajno prema test_skoka dizajna
     "RS_pos": "float64", "RS_neg": "float64",   # RS_pos + RS_neg == RV_d tačno
     "SJ": "float64",                # RS_pos - RS_neg

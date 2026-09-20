@@ -29,4 +29,9 @@ def medrv(r: np.ndarray, **kwargs) -> float:
 
 
 medrv.name = "medrv"
+# Asimptotska varijansa razlike (MedRV - RV) u BNS testu: MedRV ima
+# asimptotsku varijansu 2.96 * IQ, RV 2 * IQ, pa je konstanta 0.96
+# (Andersen, Dobrev i Schaumburg 2012). Sa BPV-ovom 0.609 test bi na
+# MedRV dizajnima bio pogrešno skaliran.
+medrv.bns_theta = 0.96
 register_estimator(medrv)

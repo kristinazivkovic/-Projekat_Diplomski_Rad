@@ -138,6 +138,50 @@ def diagnostic_significant_but_nonpositive_gap_share(df: pd.DataFrame, robust_co
     return float((significant & (gap <= 0)).mean()) if significant.any() else 0.0
 
 
+def diagnostic_iv_sanity(df: pd.DataFrame, *, tolerance: float = 1e-12) -> dict[str, float]:
+    """Sanity of the stored jump-robust estimator IV_d (measure/schema.py),
+    the value the whole C/J decomposition is derived from.
+
+    Three counted shares, and they mean VERY different things:
+
+      `iv_nonpositive_share`  IV_d <= 0. A red flag: BPV/MedRV/TrBPV are
+          sums of products of absolute returns, so the only legitimate way
+          to reach zero is a day on which the price never moves on that
+          grid (coarse price quantization -- the reason NVDA was excluded).
+          On a clean panel this should be 0.
+      `iv_nan_share`          IV_d is NaN. Should be 0: the MIN_INTRADAY_OBS
+          floor is checked for every configured grid before a day is kept
+          (data/clean.py), so the estimator is always computable.
+      `iv_above_rv_share`     IV_d > RV_d + tolerance. **EXPECTED, NOT A
+          DEFECT** -- and this is why none of this is a hard assertion. The
+          jump-robust estimator is a noisy estimate of the same integrated
+          variance RV estimates, so on a day without jumps it lands above
+          RV about half the time; measured 42.9% on AAPL/5m/2015 by
+          diagnostic_negative_rv_minus_bpv_share, which is the same event
+          seen from the other side. It is exactly why decompose() takes
+          max(RV - IV, 0) instead of trusting the sign. A share far from
+          ~50% on no-jump days is the informative reading here, not a
+          nonzero share as such.
+
+    Counted, never fatal (see the module docstring): the first two can
+    legitimately fire on a badly quantized series, and the third fires on
+    roughly half of all ordinary days."""
+    if "IV_d" not in df.columns:
+        return {"iv_nonpositive_share": float("nan"), "iv_nan_share": float("nan"),
+                "iv_above_rv_share": float("nan")}
+    iv = df["IV_d"].to_numpy(dtype=float)
+    rv = df["RV_d"].to_numpy(dtype=float)
+    finite = np.isfinite(iv)
+    n = len(iv)
+    if n == 0:
+        return {"iv_nonpositive_share": 0.0, "iv_nan_share": 0.0, "iv_above_rv_share": 0.0}
+    return {
+        "iv_nonpositive_share": float(np.sum(finite & (iv <= 0.0)) / n),
+        "iv_nan_share": float(np.sum(~finite) / n),
+        "iv_above_rv_share": float(np.sum(finite & np.isfinite(rv) & (iv > rv + tolerance)) / n),
+    }
+
+
 def diagnostic_jump_day_share(df: pd.DataFrame) -> float:
     return float(df["jump_flag"].mean())
 

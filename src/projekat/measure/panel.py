@@ -54,15 +54,22 @@ def _lm_day_stats(
     from projekat.measure.jumps._gumbel import exceedance_p_value
 
     k = LM_LOCAL_WINDOW_K[grid]
-    _, all_r, day_of_index = _concat_returns_in_order(returns_by_day)
+    _, all_r, _day_of_index = _concat_returns_in_order(returns_by_day)
     sigma = local_sigma_series(all_r, k)
+
+    # granice dana kao pomeraji u spljoštenom nizu (dani su u istom
+    # hronološkom redu kao u _concat_returns_in_order) -- isečak umesto
+    # maske preko celog niza za svaki dan
+    ordered = sorted(returns_by_day)
+    offsets = np.concatenate([[0], np.cumsum([len(returns_by_day[d]) for d in ordered])])
+    bounds = {d: (offsets[i], offsets[i + 1]) for i, d in enumerate(ordered)}
 
     out: dict[str, DayStat] = {}
     sigma_by_day: dict[str, np.ndarray] = {}
-    for i, day in enumerate(days):
-        mask = day_of_index == i
-        r_day = all_r[mask]
-        sigma_day = sigma[mask]
+    for day in days:
+        lo, hi = bounds[day]
+        r_day = all_r[lo:hi]
+        sigma_day = sigma[lo:hi]
         sigma_by_day[day] = sigma_day
         valid = ~np.isnan(sigma_day) & (sigma_day > 0)
         n = len(r_day)
@@ -81,11 +88,19 @@ def build_symbol_design(
     returns_by_day: dict[str, np.ndarray],
     half_day_flags: dict[str, bool],
     vix_lag1_by_day: dict[str, float] | None = None,
+    *,
+    lm_cache: dict | None = None,
 ) -> pd.DataFrame:
     """Sastavi dnevni panel za jedan par (simbol, dizajn). Svaka A2/A3
     implementacija se traži u registru po design.estimator /
     design.jump_test -- ova funkcija ne imenuje nijednu konkretnu
-    implementaciju."""
+    implementaciju. Ime ocenjivača se prosleđuje svakom testu skoka
+    (`estimator=`), jer BNS konstanta zavisi od njega (bns_theta u
+    registru).
+
+    `lm_cache` (opciono, {mreža: (stats, sigma)}): LM statistike po danu ne
+    zavise od ocenjivača, pa ih pozivalac može deliti između tri ocenjivača
+    i dva LM testa na istoj mreži umesto da se računaju šest puta."""
     estimator_fn = ESTIMATORS[design.estimator]
     jump_test_name = design.jump_test
     days = sorted(returns_by_day)
@@ -97,7 +112,12 @@ def build_symbol_design(
     lm_sigma_by_day: dict[str, np.ndarray] = {}
     lm_fdr_sig_by_day: dict[str, tuple[bool, bool]] = {}
     if jump_test_name in ("lm", "lm_fdr"):
-        lm_stats_by_day, lm_sigma_by_day = _lm_day_stats(days, returns_by_day, design.grid)
+        if lm_cache is not None and design.grid in lm_cache:
+            lm_stats_by_day, lm_sigma_by_day = lm_cache[design.grid]
+        else:
+            lm_stats_by_day, lm_sigma_by_day = _lm_day_stats(days, returns_by_day, design.grid)
+            if lm_cache is not None:
+                lm_cache[design.grid] = (lm_stats_by_day, lm_sigma_by_day)
         if jump_test_name == "lm_fdr":
             ordered_stats = [lm_stats_by_day[d] for d in days if d in lm_stats_by_day]
             lm_fdr_sig_by_day = lm_fdr_significance_series(ordered_stats)
@@ -126,25 +146,27 @@ def build_symbol_design(
         r_d = daily_return(r)
 
         fdr_warmup = False
+        est = design.estimator
         if jump_test_name == "naive":
-            verdict = JUMP_TESTS["naive"](r, rv, robust)
+            verdict = JUMP_TESTS["naive"](r, rv, robust, estimator=est)
         elif jump_test_name == "bns":
-            verdict = JUMP_TESTS["bns"](r, rv, robust)
+            verdict = JUMP_TESTS["bns"](r, rv, robust, estimator=est)
         elif jump_test_name == "lm":
             stat = lm_stats_by_day.get(day)
             if stat is None:
-                verdict = JUMP_TESTS["naive"](r, rv, robust)  # rezervni scenario kad K-istorija nije dovoljna
+                # rezervni scenario kad K-istorija nije dovoljna
+                verdict = JUMP_TESTS["naive"](r, rv, robust, estimator=est)
             else:
-                verdict = JUMP_TESTS["lm"](r, rv, robust, local_sigma=lm_sigma_by_day[day])
+                verdict = JUMP_TESTS["lm"](r, rv, robust, local_sigma=lm_sigma_by_day[day], estimator=est)
         elif jump_test_name == "lm_fdr":
             precomputed = lm_fdr_sig_by_day.get(day)
             if precomputed is None:
-                verdict = JUMP_TESTS["naive"](r, rv, robust)
+                verdict = JUMP_TESTS["naive"](r, rv, robust, estimator=est)
                 fdr_warmup = True
             else:
                 _, fdr_warmup = precomputed
                 verdict = JUMP_TESTS["lm_fdr"](
-                    r, rv, robust, local_sigma=lm_sigma_by_day[day], precomputed=precomputed
+                    r, rv, robust, local_sigma=lm_sigma_by_day[day], precomputed=precomputed, estimator=est
                 )
         else:
             raise ValueError(f"unknown jump_test {jump_test_name!r}")
@@ -157,6 +179,7 @@ def build_symbol_design(
                 "symbol": symbol,
                 "design_id": design.id,
                 "RV_d": rv,
+                "IV_d": robust,
                 "C_d": decomposition.C,
                 "J_d": decomposition.J,
                 "jump_flag": verdict.significant,

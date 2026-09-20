@@ -9,27 +9,46 @@ korišćenjem pravog berzanskog kalendara (projekat.data.calendar):
    40 puta veća razlika). Filtriranje prema kalendarskom prozoru same sesije
    ih uklanja.
 2. Grub filter "<80% od 390" ne bi pouzdano razlikovao pravo rano zatvaranje
-   od rupe u podacima, jer procurele svećice posle zatvaranja mogu podići
-   sirovi broj svećica i do ~470. Poređenje sa očekivanim brojem za svaki
-   konkretan dan (390 puni dan / 210 skraćeni dan) čini da filter proverava
-   pravu stvar, a dani sa ranijim zatvaranjem se ispravno *zadržavaju* sa
-   svojih pravih 210 svećica umesto da budu odbačeni.
+   od rupe u podacima. Poređenje sa očekivanim brojem za taj konkretan dan
+   čini da filter proverava pravu stvar.
 
-Dan se odbacuje za CELU mrežu (grid), a ne po pojedinačnom ocenjivaču, kada
-padne ispod MIN_INTRADAY_OBS (npr. 15-minutni skraćeni dan sa n=14) --
-primena ovog praga samo unutar pojedinačnih A2 ocenjivača (RQ/MedRV/TrBPV)
-ostavila bi BPV dizajne sa više upotrebljivih dana nego MedRV/TrBPV dizajne
-na istoj mreži, što bi napravilo neuravnotežen faktorijalni dizajn i učinilo
-udele varijanse po faktoru u ANOVA analizi neinterpretabilnim -- isti problem
-zbog kog je TrBPV prag ostao fiksiran umesto da postane 4. dimenzija.
+JEDAN SKUP DANA ZA SVE MREŽE. Odluka o zadržavanju dana ne zavisi od mreže:
+dan se zadržava samo ako prolazi proveru za SVAKU mrežu iz config.GRIDS.
+Tako 1m, 5m i 15m imaju tačno isti skup dana po konstrukciji, bez obzira na
+to koje se mreže u datom pokretanju grade:
+
+  * skraćeni dani (rano zatvaranje) se izbacuju u celini (config.
+    DROP_HALF_DAYS) -- 15m skraćeni dan daje svega 13 prinosa, pa bi ga 15m
+    izgubio a 1m/5m zadržali, i A1 nivoi bi imali različit skup (baš
+    mirnih) dana;
+  * relativni prag (>= 80% očekivanog broja 1m svećica) se meri na 1m
+    svećicama, iz kojih se grade sve mreže;
+  * apsolutni prag (>= MIN_INTRADAY_OBS prinosa) se meri za SVAKU mrežu, na
+    broju prinosa koje ta mreža zaista daje -- dan kome bilo koja mreža daje
+    premalo prinosa ispada iz svih.
+
+Prag se primenjuje za CELU mrežu, a ne po pojedinačnom ocenjivaču --
+primena samo unutar pojedinačnih A2 ocenjivača ostavila bi BPV dizajne sa
+više upotrebljivih dana nego MedRV/TrBPV dizajne na istoj mreži.
+
+Svaki izbačen dan dobija RAZLOG (EXCLUSION_REASONS), koji build_panel.py
+beleži za dijagnostiku.
 """
 
 from __future__ import annotations
 
 import pandas as pd
 
-from projekat.config import MIN_BAR_COVERAGE, MIN_INTRADAY_OBS
-from projekat.data.calendar import expected_bar_count, is_session, session_window
+from projekat.config import DROP_HALF_DAYS, GRID_MINUTES, GRIDS, MIN_BAR_COVERAGE, MIN_INTRADAY_OBS
+from projekat.data.calendar import expected_bar_count, is_half_day, is_session, session_window
+
+#: razlozi izbacivanja dana, redom kojim se proveravaju
+EXCLUSION_REASONS = (
+    "not_a_session",            # svećice na vikend/praznik (dešava se kod dobavljača)
+    "half_day",                 # rano zatvaranje, izbačeno sa svih mreža
+    "insufficient_1m_coverage", # < 80% očekivanih 1m svećica (rupa u podacima)
+    "below_min_intraday_obs",   # neka mreža daje < MIN_INTRADAY_OBS prinosa
+)
 
 
 def filter_session_bars(bars: pd.DataFrame, day: str) -> pd.DataFrame:
@@ -51,29 +70,51 @@ def drop_thin_bars(bars: pd.DataFrame) -> pd.DataFrame:
     return bars.loc[~(zero_volume & zero_return)]
 
 
-def has_sufficient_coverage(bars: pd.DataFrame, day: str, grid: str) -> bool:
-    """Relativni filter (>= 80% od očekivanog broja za taj konkretan dan) I
-    apsolutni prag (>= MIN_INTRADAY_OBS), primenjeni zajedno tako da prag
-    hvata slučajeve koje relativni filter ne može -- npr. 80% od punog
-    dnevnog broja za 15m (26) je samo 20.8, pa bi 15m dan inače mogao proći
-    sa svega 21 svećicom, dok ispravno zadržan 15m skraćeni dan (n=14)
-    uopšte treba apsolutni prag da bi bio isključen."""
-    expected = expected_bar_count(day, grid)
-    return len(bars) >= MIN_BAR_COVERAGE * expected and len(bars) >= MIN_INTRADAY_OBS
+def coverage_failure(bars: pd.DataFrame, day: str, grids=GRIDS) -> str | None:
+    """Razlog zbog kog dan NE prolazi proveru pokrivenosti, ili None.
+
+    `bars` su UVEK 1-minutne svećice (čišćenje ide pre preuzorkovanja).
+    Relativni prag se meri na 1m svećicama; apsolutni na broju PRINOSA koje
+    svaka mreža iz `grids` zaista daje (isto što panel beleži kao n_obs)."""
+    if len(bars) < MIN_BAR_COVERAGE * expected_bar_count(day, "1m"):
+        return "insufficient_1m_coverage"
+    if any(_n_grid_returns(bars, grid) < MIN_INTRADAY_OBS for grid in grids):
+        return "below_min_intraday_obs"
+    return None
 
 
-def clean_day(bars: pd.DataFrame, day: str, grid: str) -> pd.DataFrame | None:
-    """Ceo pipeline čišćenja za svećice jednog dana na jednoj mreži. Vraća
-    None ako dan nije prava berzanska sesija (svećica od dobavljača može da
-    upadne na vikend/praznik -- provereno da se to dešava, npr. na Novu
-    godinu) ili ako treba biti odbačen zbog nedovoljne pokrivenosti."""
+def has_sufficient_coverage(bars: pd.DataFrame, day: str) -> bool:
+    return coverage_failure(bars, day) is None
+
+
+def _n_grid_returns(bars: pd.DataFrame, grid: str) -> int:
+    """Broj prinosa koje measure/grids.py::resample_day + log_returns daju
+    za ove 1m svećice: resample je closed="right", label="right", pa je
+    interval svake svećice njen timestamp zaokružen NAVIŠE na mrežu."""
+    minutes = GRID_MINUTES[grid]
+    ts = bars["timestamp"]
+    n_points = ts.nunique() if minutes == 1 else ts.dt.ceil(f"{minutes}min").nunique()
+    return max(n_points - 1, 0)
+
+
+def clean_day_with_reason(bars: pd.DataFrame, day: str) -> tuple[pd.DataFrame | None, str | None]:
+    """Ceo pipeline čišćenja za 1m svećice jednog dana. Vraća (svećice,
+    None) za zadržan dan ili (None, razlog) za izbačen -- ista odluka za
+    svaku mrežu."""
     if not is_session(day):
-        return None
+        return None, "not_a_session"
+    if DROP_HALF_DAYS and is_half_day(day):
+        return None, "half_day"
     session_bars = filter_session_bars(bars, day)
     session_bars = drop_thin_bars(session_bars)
     session_bars = session_bars.drop_duplicates(subset="timestamp").sort_values("timestamp")
-    if not session_bars["timestamp"].is_monotonic_increasing:
-        session_bars = session_bars.sort_values("timestamp")
-    if not has_sufficient_coverage(session_bars, day, grid):
-        return None
-    return session_bars
+    reason = coverage_failure(session_bars, day)
+    if reason is not None:
+        return None, reason
+    return session_bars, None
+
+
+def clean_day(bars: pd.DataFrame, day: str) -> pd.DataFrame | None:
+    """clean_day_with_reason bez razloga: očišćene svećice ili None."""
+    cleaned, _reason = clean_day_with_reason(bars, day)
+    return cleaned

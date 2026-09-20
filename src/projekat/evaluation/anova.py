@@ -15,16 +15,37 @@ eta-kvadrat -- uključujući udeo merenja radi kog rad postoji. Zato
 ({horizont: ANOVATable}), i te se dekompozicije ne spajaju.
 
 SIMBOL JE EKSPLICITAN BLOKIRAJUĆI FAKTOR, iz istog razloga: ostavljen u
-rezidualu, naduvava član greške i smanjuje SVE prijavljene udele.
+rezidualu, naduvava član greške i smanjuje SVE prijavljene udele. REŽIM je
+blokirajući faktor na isti način (jedna oznaka po (simbol, dan) iz 5m RV_m,
+ista za sve dizajne -- evaluation/stratify.py), a ne eksperimentalna osa.
 
-TIP III SUMA KVADRATA, SA SUM-TO-ZERO KONTRASTIMA. Dizajn je neuravnotežen
-po konstrukciji (modeli koji zavise samo od mreže dobijaju duplirane
-redove preko 12 kombinacija ocenjivač x test_skoka), i postoje tri namerna
-interakciona člana -- pri takvom dizajnu se Tip II i Tip III NE slažu oko
-glavnih efekata. Tip III bez sum-to-zero kontrasta nije dobro definisan
-(glavni efekti zavise od proizvoljnog izbora referentne kategorije), pa se
-kontrastno kodiranje EKSPLICITNO postavlja (Sum kontrasti), a ne prepušta
-podrazumevanoj biblioteci (patsy podrazumevano koristi Treatment).
+DVE DEKOMPOZICIJE, NIKAD SPOJENE, NIJEDNA NE DUPLIRA REDOVE:
+  (a) decompose_variance_design_sensitive: SAMO modeli osetljivi na dizajn
+      (depends_on = {grid, estimator, jump_test}), svaki na svih 36
+      dizajna. Faktori: model, mreža, ocenjivač, test_skoka, režim, simbol
+      + mreža:ocenjivač, mreža:test_skoka, model:test_skoka. Ovo je jedini
+      skup u kom variraju sva tri faktora merenja, pa je to primarni
+      odgovor na H3.
+  (b) decompose_variance_grid_only: SAMO modeli koji zavise samo od mreže,
+      svaki na svoja 3 predstavnička dizajna (jedan po mreži). Faktori:
+      model, mreža, režim, simbol. Pokazuje da li A1 nosi udeo i bez
+      informacije o skokovima.
+results/report.py::_split_by_dependence deli redove na ta dva disjunktna
+skupa po depends_on; model koji zavisi samo od mreže NIKAD se ne kopira
+preko 12 kombinacija ocenjivač x test_skoka ni u jednu dekompoziciju (takvo
+kopiranje postoji samo za DM/MCS poređenja unutar dizajna,
+report.py::_broadcast_grid_only, gde ne ulazi u procenu varijanse).
+
+TIP III SUMA KVADRATA, SA SUM-TO-ZERO KONTRASTIMA. Dizajn je
+neuravnotežen i bez kopiranja redova: režim nije ravnomerno raspoređen
+preko ćelija, a modeli imaju različit broj važećih dana (npr. PatchTST
+nema prognozu dok simbol nema 60 dana istorije, ARFIMA/MEM preskaču
+simbole sa kratkom istorijom); uz tri namerna interakciona člana Tip II i
+Tip III se tada NE slažu oko glavnih efekata. Tip III bez sum-to-zero
+kontrasta nije dobro definisan (glavni efekti zavise od proizvoljnog izbora
+referentne kategorije), pa se kontrastno kodiranje EKSPLICITNO postavlja
+(Sum kontrasti), a ne prepušta podrazumevanoj biblioteci (patsy
+podrazumevano koristi Treatment).
 
 Interakcioni članovi mreža x ocenjivač i mreža x test skoka su uključeni
 jer su STRUKTURNI, a ne slučajni: šum mikrostrukture pristrasno podiže RV
@@ -51,10 +72,11 @@ nezavisnosti standardnog F-testa ovde NE VAŽI. Zato:
   * Za svaki prijavljeni F ili p: DVOSMERNO klasterisane standardne greške
     (Cameron-Gelbach-Miller), klasterisane ISTOVREMENO po danu i po
     simbolu -- ne dve odvojene jednosmerne opcije.
-  * Opciono: blok butstrap preko dana, sa dužinom bloka JEDNAKOM horizontu
-    h -- ista konvencija koju koristi evaluation/mcs.py preko
-    diebold_mariano(h=...). Dve inferencijalne putanje na različitim
-    konvencijama bloka bi se razilazile po konstrukciji.
+  * Opciono: blok butstrap preko dana, sa dužinom bloka max(h, 5). Za
+    h = 5 i h = 22 blok pokriva preklapanje ciljeva; za h = 1 blok od
+    jednog dana bi bio obični i.i.d. butstrap preko dana i ignorisao bi
+    autokorelaciju gubitaka (perzistentnost volatilnosti), pa je donja
+    granica 5 dana (nedelja trgovanja).
 
 =====================================================================
 ROBUSNOST NA ASIMETRIJU -- OBAVEZNA, NE OPCIONA
@@ -251,8 +273,23 @@ def decompose_variance_grid_only(
 
 
 def _within_day_ranks(df: pd.DataFrame, loss_col: str) -> pd.Series:
-    """Rang QLIKE-a UNUTAR (dan, simbol, dizajn, horizont) preko modela."""
-    return df.groupby(["date", "symbol", "design_id", "horizon"], observed=True)[loss_col].rank()
+    """Rang QLIKE-a UNUTAR (dan, simbol, horizont), preko SVIH ćelija
+    model x dizajn tog dana.
+
+    design_id NE SME da uđe u ključ grupisanja. Ako uđe, svaki faktor koji
+    je konstantan unutar grupe -- mreža, ocenjivač, test skoka (sve tri
+    određene sa design_id), pa i simbol i režim (u ključu ili određeni
+    njime) -- dobija IDENTIČAN srednji rang u svakoj svojoj kategoriji, jer
+    su rangovi unutar grupe uvek permutacija brojeva 1..K. Udeo varijanse
+    takvog faktora je tada TAČNO nula po konstrukciji, bez obzira na to
+    koliko snažno faktor zaista utiče na gubitak.
+
+    Provereno na sintetičkim podacima u kojima mreža množi gubitak sa
+    1x/10x/100x: sa design_id u ključu srednji rang svake mreže je tačno
+    2.0 (udeo 0), a bez njega 3.5 / 9.5 / 15.5 -- efekat se vidi. Zato je
+    varijanta rangova u tabeli robusnosti bila slepa za ceo Faktor A, tj.
+    za pitanje radi kog rad postoji (vidi tests/test_evaluation.py)."""
+    return df.groupby(["date", "symbol", "horizon"], observed=True)[loss_col].rank()
 
 
 def _drop_top_loss_days(df: pd.DataFrame, loss_col: str, *, share: float = 0.01) -> pd.DataFrame:
@@ -326,6 +363,13 @@ def robustness_table(
 
 # ── alternativna inferencijalna putanja: blok butstrap ───────────────────
 
+MIN_BLOCK_LENGTH = 5
+
+
+def block_length(horizon: int) -> int:
+    """Dužina bloka u danima: max(h, 5)."""
+    return max(int(horizon), MIN_BLOCK_LENGTH)
+
 
 def block_bootstrap_variance_shares(
     daily_loss_df: pd.DataFrame,
@@ -337,9 +381,8 @@ def block_bootstrap_variance_shares(
     seed: int = 0,
 ) -> pd.DataFrame:
     """Opciona alternativna inferencijalna putanja: blok butstrap PREKO
-    DANA sa dužinom bloka = `horizon`, ista konvencija koju koristi
-    evaluation/mcs.py (preko diebold_mariano(h=...)). Dve putanje na
-    različitim konvencijama bloka razilazile bi se po konstrukciji.
+    DANA sa dužinom bloka block_length(h) = max(h, 5) -- vidi docstring
+    modula (za h = 1 blok od jednog dana ignorisao bi autokorelaciju).
 
     Vraća po članu: butstrap sredinu i 2.5/97.5 percentile parcijalnog
     eta-kvadrata."""
@@ -350,7 +393,7 @@ def block_bootstrap_variance_shares(
     )
     cell = daily_loss_df[daily_loss_df["horizon"] == horizon]
     days = np.sort(cell["date"].unique())
-    block_len = max(int(horizon), 1)
+    block_len = block_length(horizon)
     n_blocks = max(len(days) // block_len, 1)
     rng = np.random.default_rng(seed)
 
@@ -366,7 +409,7 @@ def block_bootstrap_variance_shares(
         draws.append(table.variance_share.drop(index=["Residual"], errors="ignore"))
 
     if not draws:
-        return pd.DataFrame(columns=["term", "boot_mean", "ci_lo", "ci_hi", "n_draws"])
+        return pd.DataFrame(columns=["term", "boot_mean", "ci_lo", "ci_hi", "n_draws", "block_length"])
 
     stacked = pd.concat(draws, axis=1)
     return pd.DataFrame(
@@ -376,6 +419,7 @@ def block_bootstrap_variance_shares(
             "ci_lo": stacked.quantile(0.025, axis=1).to_numpy(),
             "ci_hi": stacked.quantile(0.975, axis=1).to_numpy(),
             "n_draws": len(draws),
+            "block_length": block_len,
         }
     ).reset_index(drop=True)
 

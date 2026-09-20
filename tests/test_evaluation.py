@@ -173,6 +173,57 @@ def test_robustness_table_reports_all_four_variants_side_by_side():
     assert (model_rows["partial_eta_sq"] > 0.01).all()
 
 
+def _grid_effect_losses(multipliers=(("1m", 100.0), ("5m", 1.0), ("15m", 10.0)), n=60):
+    """Gubici u kojima MREŽA nosi ogroman efekat (x1 / x10 / x100), a modeli
+    su međusobno skoro identični -- suprotno od onoga što varijanta rangova
+    ume da vidi ako je pogrešno grupisana."""
+    rng = np.random.default_rng(7)
+    rows = []
+    for d in pd.bdate_range("2020-01-01", periods=n):
+        for sym in ["AAA", "BBB"]:
+            for grid, mult in multipliers:
+                for est in ["bpv", "medrv"]:
+                    for model in ["char", "har_j", "lightgbm"]:
+                        rows.append({
+                            "model": model, "design_id": f"{grid}__{est}__bns",
+                            "horizon": 1, "symbol": sym, "date": d, "regime": "calm",
+                            "qlike": mult * (1.0 + 0.01 * rng.random()),
+                            "abs_error": 0.0,
+                        })
+    return pd.DataFrame(rows)
+
+
+def test_within_day_rank_variant_can_still_see_the_measurement_design():
+    """REGRESIJA: rang se računa unutar (dan, simbol, horizont), NIKAD sa
+    design_id u ključu grupisanja.
+
+    Sa design_id u ključu rangovi unutar grupe su uvek permutacija 1..K, pa
+    svaka kategorija mreže/ocenjivača/simbola dobija identičan srednji rang
+    i udeo TAČNO nula -- i to za podatke u kojima mreža množi gubitak sa
+    100. Ova varijanta bi tada tvrdila da dizajn merenja ne objašnjava
+    ništa, što je artefakt grupisanja, a ne nalaz."""
+    from projekat.evaluation.anova import _within_day_ranks
+
+    df = _grid_effect_losses()
+    grid = df["design_id"].str.split("__").str[0]
+
+    ranks = _within_day_ranks(df, "qlike")
+    mean_rank_by_grid = ranks.groupby(grid).mean()
+    # mreža x100 mora imati OSETNO lošiji (viši) srednji rang od mreže x1
+    assert mean_rank_by_grid["1m"] > mean_rank_by_grid["15m"] > mean_rank_by_grid["5m"]
+    assert mean_rank_by_grid.var() > 1.0, "rangovi su slepi za mrežu -- design_id je ušao u ključ"
+
+    # pogrešno grupisanje (sa design_id) je tačno degenerisan slučaj
+    broken = df.groupby(["date", "symbol", "design_id", "horizon"], observed=True)["qlike"].rank()
+    assert broken.groupby(grid).mean().var() == pytest.approx(0.0, abs=1e-12)
+
+    # i na kraju: varijanta rangova u tabeli robusnosti daje mreži udeo > 0
+    out = robustness_table(df)
+    rank_grid = out[(out["variant"] == "within_day_rank") & (out["term"] == "C(grid, Sum)")]
+    assert len(rank_grid) == 1
+    assert rank_grid["partial_eta_sq"].iloc[0] > 0.01
+
+
 def test_block_bootstrap_block_length_matches_horizon():
     out = block_bootstrap_variance_shares(_daily_losses(seed=3, n=80), horizon=5, n_boot=10)
     assert not out.empty

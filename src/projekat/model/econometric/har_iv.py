@@ -4,25 +4,15 @@ grid -- vix_lag1 is identical across estimator/jump_test."""
 
 from __future__ import annotations
 
-import pandas as pd
-
-from projekat.model.econometric._ols_base import fit_ols
+from projekat.model.econometric._ols_base import OLSModel
 from projekat.model.features import har_iv_features
 from projekat.model.registry import register_model
 
 
-class _HARIV:
+class _HARIV(OLSModel):
     name = "har_iv"
-    stochastic = False
-    is_sequence_model = False
-    predicts_levels = False
     depends_on = frozenset({"grid"})
-
-    def fit(self, fit_train: pd.DataFrame, val_fold: pd.DataFrame, horizon: int, *, seed: int | None = None):
-        return fit_ols(har_iv_features, fit_train, val_fold)
-
-    def features(self, df: pd.DataFrame) -> pd.DataFrame:
-        return har_iv_features(df)
+    features_fn = staticmethod(har_iv_features)
 
 
 har_iv = _HARIV()

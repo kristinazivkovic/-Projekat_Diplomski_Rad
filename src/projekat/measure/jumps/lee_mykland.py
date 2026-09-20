@@ -2,12 +2,11 @@
 
 Lokalizuje skokove na konkretne intradnevne prinose koristeći klizni
 (trailing) prozor lokalne volatilnosti od K opservacija, zatim poredi
-maksimalnu standardizovanu statistiku dana sa kritičnom vrednošću za taj
-dan, SIMULIRANOM (measure/jumps/_gumbel.py) -- NIJE fiksna konstanta, a
-nije ni udžbenička zatvorena Gumbel asimptotska formula (provereno da je
-60-500 puta previše konzervativna na svakom n koji ovaj dizajn koristi --
-vidi docstring modula _gumbel.py). Dan se obeležava kao značajan ako bilo
-koji intradnevni |L_i| prelazi kritičnu vrednost tog dana.
+maksimalnu standardizovanu statistiku dana sa zatvorenom Gumbel kritičnom
+vrednošću za taj dan (measure/jumps/_gumbel.py; zavisi od n, nikad fiksna
+konstanta), na nivou poverenja config.LM_CONFIDENCE = 0.999. Dan se
+obeležava kao značajan ako bilo koji intradnevni |L_i| prelazi kritičnu
+vrednost tog dana.
 
 K je fiksiran na 4 trgovinske sesije za SVAKU mrežu (1560/312/104 na
 1m/5m/15m) -- namerna odluka, a ne preuzeto poklapanje sa literaturom.

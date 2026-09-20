@@ -1,21 +1,29 @@
-"""Nivo 3: konstrukcija i bekbekstestiranje VaR-a (Kupiec, Christoffersen,
+"""Nivo 3: konstrukcija i bektestiranje VaR-a (Kupiec, Christoffersen,
 Dynamic Quantile, Lopez gubitak).
 
-Odluka C4: RV se računa ISKLJUČIVO iz intradnevnih prinosa -- noćni prinos
-je namerno isključen od strane sloja za merenje -- pa je sqrt(RV_hat)
-standardna devijacija SAMO intradnevnog kretanja. Probijanja (breaches)
-zato MORAJU biti merena u odnosu na `r_d` (od otvaranja do zatvaranja, već
-u panelu), nikad u odnosu na seriju prinosa od zatvaranja do zatvaranja
-koja uključuje noćni jaz koji RV ne pokriva. Korišćenje prinosa od
-zatvaranja do zatvaranja bi sistematski potcenilo VaR rizik i svaki Kupiec
-test bi odbacio hipotezu kao artefakt neusklađenosti jedinica, a ne kao
-pravi nalaz. Ovo je navedeno ograničenje VaR analize: odnosi se samo na
-intradnevni rizik.
+SAMO h = 1, PROGNOZA SA DANA t NASPRAM PRINOSA DANA t+1. Prognoza
+napravljena na kraju dana t je prognoza varijanse dana t+1, pa se
+probijanje meri prema r_d(t+1) ISTOG simbola (kolona r_d_next, koju
+walkforward.py upisuje samo kad je sledeći red simbola baš sledeći dan
+trgovanja). Poređenje sa r_d(t) bi merilo prognozu prema prinosu koji je
+već bio poznat i čiji je RV_t među ulazima modela -- probijanja bi bila
+sistematski premalo. Na h = 5/22 y_hat nije varijansa sledećeg dana, pa se
+ti horizonti ne bektestiraju.
 
-VaR bektestovi se računaju na SPOJENOJ (pooled) uniji svih test prozora
-(~2.772 dana kroz 11 prozora), a ne po pojedinačnom prozoru -- jedan prozor
-od 252 dana očekuje samo ~2.5 probijanja na nivou od 1%, što Kupiec testu
-daje suštinski nikakvu snagu (power).
+Odluka C4: RV se računa ISKLJUČIVO iz intradnevnih prinosa (noćni prinos
+je isključen), pa je sqrt(RV_hat) standardna devijacija SAMO intradnevnog
+kretanja; r_d je zbir intradnevnih prinosa dana (poslednja cena dana na
+mreži minus prva), nikad prinos od zatvaranja do zatvaranja.
+
+OBJEDINJENO PREKO PROZORA I SIMBOLA, ALI NIKAD PREKO GRANICE SIMBOLA.
+Kupiec broji probijanja nad svim danima i simbolima (jedan prozor od 252
+dana očekuje ~2.5 probijanja na nivou od 1%, što testu ne daje snagu).
+Christoffersen i DQ zavise od redosleda, pa se prelazi i pomeraji računaju
+UNUTAR svakog simbola i tek onda sabiraju -- poslednji dan jednog simbola
+nikad nije "juče" za prvi dan sledećeg.
+
+Nula probijanja je ODBACIVANJE (previše konzervativan VaR), ne prolaz:
+Kupiec koristi xlogy (0 * log 0 = 0).
 """
 
 from __future__ import annotations
@@ -23,7 +31,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
-from scipy import stats
+from scipy import special, stats
 
 
 def value_at_risk(rv_hat: np.ndarray, *, level: float = 0.01) -> np.ndarray:
@@ -33,12 +41,22 @@ def value_at_risk(rv_hat: np.ndarray, *, level: float = 0.01) -> np.ndarray:
 
 
 def breaches_against_r_d(r_d: np.ndarray, var_estimate: np.ndarray) -> np.ndarray:
-    """Serija probijanja (breach) usklađena sa konstrukcijom RV-a koja
-    obuhvata samo intradnevni deo: probijanje je gubitak (negativan r_d iznad
-    -VaR) koji prelazi VaR prag. r_d ima znak; VaR je pozitivan prag na
-    strani gubitka, pa se poredi -r_d (gubitak) sa var_estimate."""
+    """Probijanje: gubitak -r_d veći od VaR praga."""
     loss = -r_d
     return (loss > var_estimate).astype(int)
+
+
+def _group_bounds(groups) -> list[tuple[int, int]]:
+    """Granice uzastopnih blokova iste grupe (niz mora biti sortiran po grupi)."""
+    if groups is None:
+        return []
+    g = np.asarray(groups)
+    if len(g) == 0:
+        return []
+    change = np.flatnonzero(g[1:] != g[:-1]) + 1
+    starts = np.concatenate([[0], change])
+    ends = np.concatenate([change, [len(g)]])
+    return list(zip(starts, ends))
 
 
 @dataclass(frozen=True)
@@ -52,13 +70,14 @@ class KupiecResult:
 def kupiec_test(breach_series: np.ndarray, *, level: float) -> KupiecResult:
     n = len(breach_series)
     x = int(np.sum(breach_series))
-    pi_hat = x / n if n > 0 else 0.0
-    if pi_hat in (0.0, 1.0) or level in (0.0, 1.0):
-        lr = 0.0
-    else:
-        ll_null = x * np.log(level) + (n - x) * np.log(1 - level)
-        ll_alt = x * np.log(pi_hat) + (n - x) * np.log(1 - pi_hat)
-        lr = -2 * (ll_null - ll_alt)
+    if n == 0 or level in (0.0, 1.0):
+        return KupiecResult(n_breaches=x, n_obs=n, lr_statistic=float("nan"), p_value=float("nan"))
+    pi_hat = x / n
+    # xlogy: 0*log(0) = 0, so zero breaches gives the proper (large) LR --
+    # an over-conservative VaR is rejected, not passed
+    ll_null = special.xlogy(x, level) + special.xlogy(n - x, 1 - level)
+    ll_alt = special.xlogy(x, pi_hat) + special.xlogy(n - x, 1 - pi_hat)
+    lr = max(-2 * (ll_null - ll_alt), 0.0)
     p_value = 1 - stats.chi2.cdf(lr, df=1)
     return KupiecResult(n_breaches=x, n_obs=n, lr_statistic=float(lr), p_value=float(p_value))
 
@@ -69,14 +88,19 @@ class ChristoffersenResult:
     p_value: float
 
 
-def christoffersen_test(breach_series: np.ndarray) -> ChristoffersenResult:
-    """Test nezavisnosti: verovatnoća probijanja ne bi trebalo da zavisi od
-    toga da li je juče bilo probijanje."""
-    b = breach_series
-    n00 = np.sum((b[:-1] == 0) & (b[1:] == 0))
-    n01 = np.sum((b[:-1] == 0) & (b[1:] == 1))
-    n10 = np.sum((b[:-1] == 1) & (b[1:] == 0))
-    n11 = np.sum((b[:-1] == 1) & (b[1:] == 1))
+def christoffersen_test(breach_series: np.ndarray, *, groups=None) -> ChristoffersenResult:
+    """Test nezavisnosti: verovatnoća probijanja ne sme zavisiti od toga da
+    li je juče bilo probijanje. Sa `groups` (npr. simbol, niz sortiran po
+    grupi pa datumu) prelazi se broje unutar grupe i sabiraju."""
+    b = np.asarray(breach_series)
+    bounds = _group_bounds(groups) or [(0, len(b))]
+    n00 = n01 = n10 = n11 = 0
+    for lo, hi in bounds:
+        prev, cur = b[lo:hi - 1], b[lo + 1:hi]
+        n00 += int(np.sum((prev == 0) & (cur == 0)))
+        n01 += int(np.sum((prev == 0) & (cur == 1)))
+        n10 += int(np.sum((prev == 1) & (cur == 0)))
+        n11 += int(np.sum((prev == 1) & (cur == 1)))
 
     pi01 = n01 / (n00 + n01) if (n00 + n01) > 0 else 0.0
     pi11 = n11 / (n10 + n11) if (n10 + n11) > 0 else 0.0
@@ -100,33 +124,44 @@ class DynamicQuantileResult:
     p_value: float
 
 
-def dynamic_quantile_test(breach_series: np.ndarray, var_series: np.ndarray, *, level: float, n_lags: int = 4) -> DynamicQuantileResult:
-    """Test nezavisnosti zasnovan na regresiji: pogoci (hits = probijanje -
-    nivo) regresirani na pomerene (lagged) pogotke i sam VaR nivo; testira
-    da li su svi koeficijenti == 0."""
+def dynamic_quantile_test(
+    breach_series: np.ndarray, var_series: np.ndarray, *, level: float, n_lags: int = 4, groups=None
+) -> DynamicQuantileResult:
+    """Pogoci (probijanje - nivo) regresirani na sopstvene pomeraje i VaR
+    nivo; testira da li su svi koeficijenti == 0. Sa `groups` se pomeraji
+    grade unutar svake grupe (prvih n_lags redova grupe otpada), pa se
+    regresija radi nad naslaganim redovima."""
     import statsmodels.api as sm
 
-    hit = breach_series.astype(float) - level
-    n = len(hit)
-    if n <= n_lags + 2:
+    hit_all = np.asarray(breach_series, dtype=float) - level
+    var_all = np.asarray(var_series, dtype=float)
+    bounds = _group_bounds(groups) or [(0, len(hit_all))]
+    ys, xs = [], []
+    for lo, hi in bounds:
+        hit, var = hit_all[lo:hi], var_all[lo:hi]
+        n = len(hit)
+        if n <= n_lags:
+            continue
+        ys.append(hit[n_lags:])
+        cols = [hit[n_lags - lag: n - lag] for lag in range(1, n_lags + 1)]
+        cols.append(var[n_lags:])
+        xs.append(np.column_stack(cols))
+    if not ys or sum(len(y) for y in ys) <= n_lags + 2:
         return DynamicQuantileResult(f_statistic=float("nan"), p_value=float("nan"))
 
-    y = hit[n_lags:]
-    X_cols = [hit[n_lags - lag : n - lag] for lag in range(1, n_lags + 1)]
-    X_cols.append(var_series[n_lags:])
-    X = np.column_stack(X_cols)
-    X = sm.add_constant(X)
-
+    y = np.concatenate(ys)
+    X = sm.add_constant(np.vstack(xs), has_constant="add")
+    # With no breach (or only breaches) the lagged hits are constant and
+    # collinear with the intercept: the test is undefined there -- Kupiec
+    # already carries that cell's verdict.
+    if np.linalg.matrix_rank(X) < X.shape[1]:
+        return DynamicQuantileResult(f_statistic=float("nan"), p_value=float("nan"))
     model = sm.OLS(y, X).fit()
-    f_stat = model.fvalue
-    p_value = model.f_pvalue
-    return DynamicQuantileResult(f_statistic=float(f_stat), p_value=float(p_value))
+    return DynamicQuantileResult(f_statistic=float(model.fvalue), p_value=float(model.f_pvalue))
 
 
 def lopez_loss(r_d: np.ndarray, var_estimate: np.ndarray) -> float:
-    """Probijanja (u odnosu na gubitak zasnovan na r_d, usklađeno sa
-    konstrukcijom RV-a koja obuhvata samo intradnevni deo) kažnjena
-    srazmerno svojoj veličini, a ne samo prebrojana."""
+    """Probijanja kažnjena srazmerno veličini premašaja, ne samo prebrojana."""
     loss = -r_d
     breach = loss > var_estimate
     penalty = np.where(breach, 1 + (loss - var_estimate) ** 2, 0.0)
@@ -138,49 +173,40 @@ def var_backtest_table(
     *,
     level: float = 0.01,
     y_hat_col: str = "y_hat",
-    r_d_col: str = "r_d",
+    return_col: str = "r_d_next",
 ) -> "pd.DataFrame":
-    """SPOJEN (pooled) VaR bektest po (model, design_id, horizont) -- nikad
-    po prozoru.
-
-    Jedan prozor od 252 dana očekuje ~2.5 probijanja na nivou od 1%, pa
-    Kupiec na njemu nema praktično nikakvu snagu; spajanjem svih 11 test
-    prozora (~2.772 dana) test postaje informativan. Zato se `window_id`
-    NE nalazi među grupišućim kolonama -- to je namerno, ne propust.
-
-    TAČNI BROJEVI PROBIJANJA se prijavljuju pored p-vrednosti: p-vrednost
-    bez broja probijanja skriva razliku između "3 probijanja od očekivanih
-    28" i "28 od 28", a upravo taj odnos je ono što se u radu tumači.
-    """
+    """VaR bektest po (model, design_id), SAMO h = 1, prognoza sa dana t
+    naspram r_d(t+1) istog simbola; objedinjeno preko prozora i simbola,
+    ali Christoffersen/DQ nikad preko granice simbola. Tačni brojevi
+    probijanja se prijavljuju pored p-vrednosti."""
     import pandas as pd
 
+    df = results_df[results_df["horizon"] == 1]
     rows = []
-    for (model, design_id, horizon), cell in results_df.groupby(
-        ["model", "design_id", "horizon"], observed=True
-    ):
+    for (model, design_id), cell in df.groupby(["model", "design_id"], observed=True):
         cell = cell.sort_values(["symbol", "date"])
         rv_hat = cell[y_hat_col].to_numpy(dtype=float)
-        r_d = cell[r_d_col].to_numpy(dtype=float)
-        ok = ~np.isnan(rv_hat) & ~np.isnan(r_d) & (rv_hat > 0)
+        r_next = cell[return_col].to_numpy(dtype=float)
+        ok = np.isfinite(rv_hat) & np.isfinite(r_next) & (rv_hat > 0)
         if ok.sum() < 10:
             continue
-        rv_hat, r_d = rv_hat[ok], r_d[ok]
+        rv_hat, r_next = rv_hat[ok], r_next[ok]
+        symbols = cell["symbol"].to_numpy()[ok]
 
         var_estimate = value_at_risk(rv_hat, level=level)
-        breaches = breaches_against_r_d(r_d, var_estimate)
-
+        breaches = breaches_against_r_d(r_next, var_estimate)
         kupiec = kupiec_test(breaches, level=level)
-        christoffersen = christoffersen_test(breaches)
-        dq = dynamic_quantile_test(breaches, var_estimate, level=level)
-
+        christoffersen = christoffersen_test(breaches, groups=symbols)
+        dq = dynamic_quantile_test(breaches, var_estimate, level=level, groups=symbols)
         rows.append(
             {
                 "model": model,
                 "design_id": design_id,
-                "horizon": horizon,
+                "horizon": 1,
                 "level": level,
                 "n_obs": kupiec.n_obs,
-                "n_breaches": kupiec.n_breaches,          # tačan broj, uz p-vrednosti
+                "n_symbols": int(len(np.unique(symbols))),
+                "n_breaches": kupiec.n_breaches,
                 "expected_breaches": level * kupiec.n_obs,
                 "breach_rate": kupiec.n_breaches / kupiec.n_obs if kupiec.n_obs else float("nan"),
                 "kupiec_lr": kupiec.lr_statistic,
@@ -189,8 +215,8 @@ def var_backtest_table(
                 "christoffersen_p": christoffersen.p_value,
                 "dq_f": dq.f_statistic,
                 "dq_p": dq.p_value,
-                "lopez_loss": lopez_loss(r_d, var_estimate),
-                "pooled_over_windows": True,
+                "lopez_loss": lopez_loss(r_next, var_estimate),
+                "pooled_over_windows_and_symbols": True,
             }
         )
     return pd.DataFrame(rows)

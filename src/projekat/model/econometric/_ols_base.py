@@ -1,46 +1,82 @@
-"""Shared OLS fit/predict scaffolding for the HAR family, so the
-regression mechanics (add constant, fit, predict, validation-fold
-backtransform correction) are implemented once rather than per model file."""
+"""Shared OLS fit/predict for the log-space HAR family (log_har, char,
+har_j, shar, harq, har_iv, the HAR part of log_har_ttm): one regression of
+log y_{t,h} per horizon, fit on the rows the walk-forward hands in (all
+strictly before the refit date, NaN targets where not yet realized), and a
+forecast for each origin row from that row's own regressors (all known on
+the origin day). No correction here -- walkforward.py estimates it from the
+model's own out-of-sample errors.
+
+`features_fn(df)` builds the regressors. A model whose regressors need
+parameters estimated on the training data (HARQ's standardized sqrt(RQ))
+passes `prepare(train) -> params` and a `features_fn(df, params)`; the
+params are frozen at the refit and reused for every forecast until the
+next one."""
 
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-import statsmodels.api as sm
 
-from projekat.model.backtransform import residual_correction
-from projekat.model.targets import TARGET_COL
+from projekat.model.targets import target_columns
 
 
 class FittedOLS:
-    def __init__(self, result, feature_cols: list[str], backtransform_correction: float):
-        self._result = result
+    def __init__(self, coefs: dict[int, np.ndarray | None], feature_cols: list[str], features_fn, params=None):
+        self._coefs = coefs
         self._feature_cols = feature_cols
-        self.backtransform_correction = backtransform_correction
+        self._features_fn = features_fn
+        self._params = params
 
-    def predict(self, X: pd.DataFrame) -> np.ndarray:
-        X_ = sm.add_constant(X[self._feature_cols], has_constant="add")
-        return self._result.predict(X_).to_numpy()
+    def features(self, df: pd.DataFrame) -> pd.DataFrame:
+        X = self._features_fn(df) if self._params is None else self._features_fn(df, self._params)
+        return X[self._feature_cols]
+
+    def predict_rows(self, rows: pd.DataFrame, horizons) -> dict[int, np.ndarray]:
+        X = self.features(rows)
+        values = X.to_numpy(dtype=float)
+        valid = np.isfinite(values).all(axis=1)
+        design = np.column_stack([np.ones(len(values)), values])
+        out = {}
+        for h in horizons:
+            pred = np.full(len(values), np.nan)
+            coef = self._coefs.get(h)
+            if coef is not None and valid.any():
+                pred[valid] = design[valid] @ coef
+            out[h] = pred
+        return out
+
+    def predict(self, history: pd.DataFrame, origin_idx: np.ndarray, horizons) -> dict[int, np.ndarray]:
+        return self.predict_rows(history.iloc[origin_idx], horizons)
 
 
-def fit_ols(features_fn, fit_train: pd.DataFrame, val_fold: pd.DataFrame) -> FittedOLS:
-    """Fit on fit_train (excludes the validation fold), then estimate the
-    backtransform correction from OUT-OF-FOLD residuals on val_fold --
-    never in-sample."""
-    X_train = features_fn(fit_train)
-    y_train = fit_train[TARGET_COL]
-    valid = X_train.notna().all(axis=1) & y_train.notna()
-    X_with_const = sm.add_constant(X_train.loc[valid], has_constant="add")
-    result = sm.OLS(y_train.loc[valid], X_with_const).fit()
+def fit_ols(features_fn, train: pd.DataFrame, horizons, *, prepare=None) -> FittedOLS:
+    params = prepare(train) if prepare is not None else None
+    X = features_fn(train) if params is None else features_fn(train, params)
+    values = X.to_numpy(dtype=float)
+    finite_x = np.isfinite(values).all(axis=1)
+    design = np.column_stack([np.ones(len(values)), values])
+    coefs: dict[int, np.ndarray | None] = {}
+    for h in horizons:
+        log_col, _, _ = target_columns(h)
+        y = train[log_col].to_numpy(dtype=float)
+        valid = finite_x & np.isfinite(y)
+        if valid.sum() <= design.shape[1]:
+            coefs[h] = None
+            continue
+        coefs[h], *_ = np.linalg.lstsq(design[valid], y[valid], rcond=None)
+    return FittedOLS(coefs, list(X.columns), features_fn, params)
 
-    X_val = features_fn(val_fold)
-    y_val = val_fold[TARGET_COL]
-    valid_val = X_val.notna().all(axis=1) & y_val.notna()
-    if valid_val.any():
-        X_val_const = sm.add_constant(X_val.loc[valid_val], has_constant="add")
-        val_pred = result.predict(X_val_const).to_numpy()
-        correction = residual_correction(y_val.loc[valid_val].to_numpy(), val_pred)
-    else:
-        correction = 0.0
 
-    return FittedOLS(result, list(X_train.columns), correction)
+class OLSModel:
+    """Base for the stateless log-space HAR-family models: every refit is
+    one OLS per horizon on `features_fn`'s regressors."""
+
+    stochastic = False
+    predicts_levels = False
+    refit = "every_21"
+    correction = "log"
+
+    features_fn = None  # set by subclasses (a plain function of the frame)
+
+    def fit(self, train: pd.DataFrame, horizons, *, seed: int | None = None) -> FittedOLS:
+        return fit_ols(type(self).features_fn, train, horizons)

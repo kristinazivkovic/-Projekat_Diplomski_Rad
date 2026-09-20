@@ -51,4 +51,7 @@ def trbpv(r: np.ndarray, threshold: float = 3.0, **kwargs) -> float:
 
 
 trbpv.name = "trbpv"
+# Bipower varijacija sa pragom ima istu asimptotsku varijansu kao BPV
+# (Corsi, Pirino i Renò 2010), pa i istu BNS konstantu.
+trbpv.bns_theta = (math.pi / 2) ** 2 + math.pi - 5
 register_estimator(trbpv)

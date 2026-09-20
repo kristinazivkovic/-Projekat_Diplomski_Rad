@@ -1,5 +1,22 @@
-"""Model Confidence Set (Hansen, Lunde & Nason): iteratively eliminate the
-worst model until the survivors are statistically indistinguishable.
+"""Sequential elimination IN THE SPIRIT OF the Model Confidence Set: drop
+the worst model until the survivors are statistically indistinguishable.
+
+WHAT THIS IS AND IS NOT
+=======================
+This is NOT the bootstrap MCS of Hansen, Lunde & Nason (2011). That
+procedure builds a range or semi-quadratic statistic over ALL survivors and
+gets its distribution from a block bootstrap, which controls the familywise
+error of the whole elimination sequence. Here the elimination test is a
+single pairwise Diebold-Mariano between the worst and the best survivor,
+with no multiplicity correction across the sequence. It is a defensible,
+much cheaper approximation, but the thesis must describe it this way and
+list it among the limitations -- not cite it as the MCS of Hansen et al.
+
+The loss series handed in must ALREADY BE DAILY (one value per trading
+day, cross-sectionally averaged over symbols -- see
+results/tables.py::mcs_membership_table and evaluation/dm_test.py). A
+(date, symbol)-stacked series makes every elimination test over-reject and
+the surviving set comes out far too narrow.
 
 =====================================================================
 MCS MEMBERSHIP IS NOT A RANKING OF POINT LOSSES

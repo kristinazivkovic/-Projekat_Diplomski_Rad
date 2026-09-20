@@ -1,31 +1,39 @@
 """Orkestrira ceo pipeline sloja za merenje za jedan ili više simbola:
 učitavanje -> čišćenje -> preuzorkovanje po mreži -> izgradnja panela po dizajnu
--> čuvanje u data/processed/.
+-> čuvanje u data/processed/, zajedno sa dijagnostikom panela.
 
 Upotreba:
     uv run python -m projekat.build_panel --symbols AAPL --start 2015-01-01 --end 2016-01-01 --grids 5m --estimators bpv --jump-tests bns
+
+Pored panela (`--out`, npr. panel.parquet) pišu se i:
+    <stem>_exclusions.parquet   jedan red po izbačenom (simbol, dan) sa razlogom
+    <stem>_corporate.csv        status provere korporativnih akcija po simbolu
+    <stem>_diagnostics.csv      udeo dana sa skokom, Jaccard, dani po mreži,
+                                preskočene provere, izbačeni dani po razlogu
+                                (qa/panel_diagnostics.py)
 """
 
 from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
+import numpy as np
 import pandas as pd
-import pyarrow as pa
-import pyarrow.parquet as pq
 
-from projekat.config import PROCESSED_DIR
-from projekat.data.calendar import is_half_day
-from projekat.data.clean import clean_day
+from projekat.config import GRIDS, PROCESSED_DIR
+from projekat.data.calendar import is_half_day, sessions_between
+from projekat.data.clean import clean_day_with_reason
 from projekat.data.corporate import UnadjustedDataError, fetch_corporate_actions, verify_split_adjustment
 from projekat.data.vault import load_1m_range
 from projekat.data.vix import fetch_vix_daily, vix_lag1_on_calendar
 from projekat.measure.design import MeasurementDesign
-from projekat.measure.grids import resample_day, log_returns
+from projekat.measure.grids import log_returns, resample_day
 from projekat.measure.panel import build_symbol_design
 from projekat.measure.schema import validate_panel
 from projekat.qa.checks import assert_min_intraday_obs, assert_semivariance_identity
+from projekat.qa.panel_diagnostics import build_panel_diagnostics, side_file_paths
 
 
 def _load_raw_bars(symbol: str, start: str, end: str) -> pd.DataFrame:
@@ -35,8 +43,6 @@ def _load_raw_bars(symbol: str, start: str, end: str) -> pd.DataFrame:
     # whole-range file for older cache entries, so nothing downstream needs
     # to know which way a symbol was fetched.
     df = load_1m_range(symbol, start, end)
-    # normalize expected column names from the vault export
-    # uskladi imena kolona sa onima koje se očekuju iz izvoza vault-a
     rename_map = {}
     if "ts" in df.columns and "timestamp" not in df.columns:
         rename_map["ts"] = "timestamp"
@@ -63,73 +69,105 @@ def _daily_close(raw_by_day: dict[str, pd.DataFrame]) -> dict[str, float]:
     return out
 
 
-def build_returns_for_symbol(symbol: str, start: str, end: str, grid: str) -> tuple[dict[str, "np.ndarray"], dict[str, bool], dict[str, float]]:
-    print(f"[{symbol}] fetching 1m bars {start}..{end}...", file=sys.stderr)
-    raw = _load_raw_bars(symbol, start, end)
-    print(f"[{symbol}] {len(raw)} raw 1m bars fetched", file=sys.stderr)
+def returns_by_grid_from_raw(
+    symbol: str, raw_by_day: dict[str, pd.DataFrame], grids, *, start: str, end: str
+) -> tuple[dict[str, dict[str, np.ndarray]], dict[str, bool], list[dict]]:
+    """Očisti svaki dan JEDNOM (odluka ne zavisi od mreže -- data/clean.py),
+    pa preuzorkuj zadržane svećice na svaku mrežu. Vraća
+    ({mreža: {dan: prinosi}}, {dan: skraćen}, izbačeni dani sa razlogom).
 
-    raw_by_day = _bars_by_day(raw)
-    returns_by_day = {}
-    half_day_flags = {}
+    Dan ostaje samo ako ga SVE mreže zadržavaju, pa 1m/5m/15m imaju isti
+    skup dana po konstrukciji."""
+    returns: dict[str, dict[str, np.ndarray]] = {g: {} for g in grids}
+    half_day_flags: dict[str, bool] = {}
+    exclusions: list[dict] = []
 
     for day, bars in raw_by_day.items():
-        cleaned = clean_day(bars, day, grid)
+        cleaned, reason = clean_day_with_reason(bars, day)
         if cleaned is None:
+            exclusions.append({"symbol": symbol, "date": day, "reason": reason})
             continue
-        prices = resample_day(cleaned, grid)
-        r = log_returns(prices)
-        if len(r) < 2:
+        per_grid = {g: log_returns(resample_day(cleaned, g)) for g in grids}
+        if any(len(r) < 2 for r in per_grid.values()):
+            # coverage_failure već zahteva >= MIN_INTRADAY_OBS prinosa na
+            # svakoj mreži; ovo je samo zaštita
+            exclusions.append({"symbol": symbol, "date": day, "reason": "fewer_than_2_returns"})
             continue
-        returns_by_day[day] = r
+        for g, r in per_grid.items():
+            returns[g][day] = r
         half_day_flags[day] = is_half_day(day)
 
-    print(f"[{symbol}] {len(returns_by_day)} usable trading days at grid={grid}", file=sys.stderr)
-    return returns_by_day, half_day_flags, _daily_close(raw_by_day)
+    # sesije u opsegu dobavljačevih podataka za koje nema nijedne svećice
+    if raw_by_day:
+        first, last = min(raw_by_day), max(raw_by_day)
+        lo, hi = max(first, start), min(last, end)
+        if lo <= hi:
+            for session in sessions_between(lo, hi):
+                day = session.strftime("%Y-%m-%d")
+                if day not in raw_by_day:
+                    exclusions.append({"symbol": symbol, "date": day, "reason": "no_vendor_bars"})
+
+    return returns, half_day_flags, exclusions
 
 
-def build_panel_for_symbol(symbol: str, start: str, end: str, designs: list[MeasurementDesign]) -> pd.DataFrame:
+def build_panel_for_symbol(
+    symbol: str,
+    start: str,
+    end: str,
+    designs: list[MeasurementDesign],
+    *,
+    vix_lag1_by_day: dict[str, float] | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
+    """Panel jednog simbola za sve dizajne, plus izbačeni dani i status
+    provere korporativnih akcija."""
+    print(f"[{symbol}] fetching 1m bars {start}..{end}...", file=sys.stderr)
+    raw = _load_raw_bars(symbol, start, end)
+    print(f"[{symbol}] {len(raw)} raw 1m bars", file=sys.stderr)
+    raw_by_day = _bars_by_day(raw)
+    del raw
+
+    grids = sorted({d.grid for d in designs}, key=list(GRIDS).index)
+    returns, half_day_flags, exclusions = returns_by_grid_from_raw(symbol, raw_by_day, grids, start=start, end=end)
+    print(f"[{symbol}] {len(half_day_flags)} usable trading days (identical on {grids})", file=sys.stderr)
+
+    # Hard gate (data/corporate.py): raise loudly if the vault has started
+    # serving split-unadjusted prices. Only the fetch can fail non-fatally
+    # (network/vendor); a real UnadjustedDataError propagates and stops the
+    # build. Every skip is RECORDED -- it is a hole in a hard check, and the
+    # thesis must be able to say how many there were.
+    corporate = {"symbol": symbol, "status": "checked", "error": ""}
+    try:
+        splits, _dividends = fetch_corporate_actions(symbol, start, end)
+        verify_split_adjustment(_daily_close(raw_by_day), splits)
+    except UnadjustedDataError:
+        raise
+    except Exception as e:
+        corporate = {"symbol": symbol, "status": "skipped_fetch_failed", "error": f"{type(e).__name__}: {e}"[:500]}
+        print(f"[{symbol}] WARNING: corporate-actions fetch failed ({e}), split gate skipped", file=sys.stderr)
+    del raw_by_day
+
     frames = []
-    returns_cache: dict[str, tuple[dict, dict, dict]] = {}
+    lm_cache: dict = {}   # LM statistike po mreži, zajedničke za sve ocenjivače
+    for design in designs:
+        print(f"[{symbol}] building panel for design={design.id}...", file=sys.stderr)
+        frames.append(
+            build_symbol_design(
+                symbol, design, returns[design.grid], half_day_flags, vix_lag1_by_day, lm_cache=lm_cache
+            )
+        )
 
-    vix_lag1_by_day = None
+    panel = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+    return panel, pd.DataFrame(exclusions, columns=["symbol", "date", "reason"]), corporate
+
+
+def _vix_lag1(start: str, end: str) -> dict[str, float] | None:
     try:
         vix_raw = fetch_vix_daily(start, end)
-        from projekat.data.calendar import sessions_between
-
-        sessions = sessions_between(start, end)
-        lag1 = vix_lag1_on_calendar(vix_raw, sessions)
-        vix_lag1_by_day = {d.strftime("%Y-%m-%d"): v for d, v in lag1.items()}
+        lag1 = vix_lag1_on_calendar(vix_raw, sessions_between(start, end))
+        return {d.strftime("%Y-%m-%d"): v for d, v in lag1.items()}
     except Exception as e:
-        print(f"[{symbol}] WARNING: VIX fetch failed ({e}), vix_lag1 will be NaN", file=sys.stderr)
-
-    split_gate_checked = False
-
-    for design in designs:
-        if design.grid not in returns_cache:
-            returns_cache[design.grid] = build_returns_for_symbol(symbol, start, end, design.grid)
-        returns_by_day, half_day_flags, daily_close = returns_cache[design.grid]
-
-        if not split_gate_checked:
-            # Hard gate (data/corporate.py): raise loudly if the vault has
-            # started serving split-unadjusted prices, instead of silently
-            # feeding a corporate-action artifact into the jump tests as a
-            # legitimate multi-sigma jump. Only the split fetch/check can
-            # fail non-fatally here (network/vendor availability); a real
-            # UnadjustedDataError must propagate and stop the build.
-            try:
-                splits, _dividends = fetch_corporate_actions(symbol, start, end)
-                verify_split_adjustment(daily_close, splits)
-            except UnadjustedDataError:
-                raise
-            except Exception as e:
-                print(f"[{symbol}] WARNING: corporate-actions fetch failed ({e}), split gate skipped", file=sys.stderr)
-            split_gate_checked = True
-
-        print(f"[{symbol}] building panel for design={design.id}...", file=sys.stderr)
-        df = build_symbol_design(symbol, design, returns_by_day, half_day_flags, vix_lag1_by_day)
-        frames.append(df)
-
-    return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+        print(f"WARNING: VIX fetch failed ({e}), vix_lag1 will be NaN", file=sys.stderr)
+        return None
 
 
 def main():
@@ -150,28 +188,33 @@ def main():
         for j in args.jump_tests
     ]
     print(f"Designs: {[d.id for d in designs]}", file=sys.stderr)
+    vix_lag1_by_day = _vix_lag1(args.start, args.end)
 
-    # Per-symbol isolation: a 30-symbol build must not lose 29 completed
-    # symbols because the 30th hit a network/vendor failure. A symbol that
-    # fails is REPORTED and the build continues; the summary below names
-    # every one, so a missing symbol can never pass unnoticed. (Raw bars
-    # are cached per symbol, so re-running is cheap -- see
-    # scripts/fetch_data.py, which is the resumable way to get them.)
-    all_frames = []
+    # Per-symbol isolation: a symbol that fails is REPORTED and the build
+    # continues; the summary below names every one.
+    all_frames, all_exclusions, corporate_rows = [], [], []
     failed: list[tuple[str, str]] = []
     for i, symbol in enumerate(args.symbols, start=1):
         try:
-            panel = build_panel_for_symbol(symbol, args.start, args.end, designs)
+            panel, exclusions, corporate = build_panel_for_symbol(
+                symbol, args.start, args.end, designs, vix_lag1_by_day=vix_lag1_by_day
+            )
             all_frames.append(panel)
+            all_exclusions.append(exclusions)
+            corporate_rows.append(corporate)
             print(f"[{i}/{len(args.symbols)}] {symbol}: {len(panel)} rows", file=sys.stderr)
         except KeyboardInterrupt:
             print(f"\n[SIGINT] stopped during {symbol}", file=sys.stderr)
             raise
         except Exception as exc:
             failed.append((symbol, f"{type(exc).__name__}: {exc}"))
+            corporate_rows.append({"symbol": symbol, "status": "build_failed", "error": f"{type(exc).__name__}: {exc}"[:500]})
             print(f"[{i}/{len(args.symbols)}] {symbol}: FAILED {type(exc).__name__}: {exc}", file=sys.stderr)
 
     full_panel = pd.concat(all_frames, ignore_index=True) if all_frames else pd.DataFrame()
+    exclusions = pd.concat(all_exclusions, ignore_index=True) if all_exclusions else pd.DataFrame(
+        columns=["symbol", "date", "reason"])
+    corporate = pd.DataFrame(corporate_rows, columns=["symbol", "status", "error"])
     print(f"Full panel: {len(full_panel)} rows, {full_panel['symbol'].nunique() if len(full_panel) else 0} symbols", file=sys.stderr)
     if failed:
         print(f"\n{len(failed)} symbol(s) FAILED and are absent from the panel:", file=sys.stderr)
@@ -180,20 +223,28 @@ def main():
 
     if len(full_panel):
         validate_panel(full_panel)
-        # Hard QA gates (qa/checks.py) against the ACTUAL built panel, not
-        # just synthetic test fixtures -- these must never fire on real
-        # data; if they do, it's a genuine measurement-layer defect, not a
-        # data-quality nuisance to work around.
+        # Hard QA gates (qa/checks.py) against the ACTUAL built panel.
         assert_semivariance_identity(full_panel)
         assert_min_intraday_obs(full_panel["n_obs"], context="build_panel.main")
 
-    out_path = args.out or str(PROCESSED_DIR / "panel_mini.parquet")
+    out_path = Path(args.out or str(PROCESSED_DIR / "panel_mini.parquet"))
+    # Panel se upisuje TEK OVDE, na kraju izgradnje. Ako izlazni direktorijum
+    # ne postoji, to_parquet baca OSError i ceo posao (oko 20 minuta za pun
+    # univerzum) propada u poslednjem koraku -- pa se direktorijum pravi ovde.
+    out_path.parent.mkdir(parents=True, exist_ok=True)
     full_panel.to_parquet(out_path, index=False)
     print(f"Saved panel to {out_path}", file=sys.stderr)
 
+    paths = side_file_paths(out_path)
+    exclusions.to_parquet(paths["exclusions"], index=False)
+    corporate.to_csv(paths["corporate"], index=False)
+    if len(full_panel):
+        diagnostics = build_panel_diagnostics(full_panel, exclusions, corporate)
+        diagnostics.to_csv(paths["diagnostics"], index=False)
+        print(f"Saved diagnostics to {paths['diagnostics']}", file=sys.stderr)
+
     # Non-zero exit if any symbol is missing: a partial panel is a valid
-    # artefact to keep (the completed symbols are real), but the caller
-    # must be able to tell it apart from a complete one.
+    # artefact to keep, but the caller must be able to tell it apart.
     return 1 if failed else 0
 
 

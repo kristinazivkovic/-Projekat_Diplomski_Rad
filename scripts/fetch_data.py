@@ -52,7 +52,10 @@ from __future__ import annotations
 
 import argparse
 import sys
+import os
+import threading
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -63,11 +66,51 @@ for _stream in (sys.stdout, sys.stderr):
 
 from projekat.config import END_DATE, RAW_DIR, START_DATE, UNIVERSE  # noqa: E402
 from projekat.data.vault import (  # noqa: E402
+    EXPORT_ROW_CAP,
     _chunk_ranges,
-    fetch_1m_chunked,
+    _client,
+    fetch_1m,
     is_truncated,
     load_manifest,
 )
+
+
+class QuotaGate:
+    """Global gate in front of POST /export, shared by all workers.
+
+    The quota limits job CREATION only, so this is the one serialised step:
+    creations are spaced by `pace`, and a 429 seen by ANY worker pauses
+    creation for EVERY worker (escalating backoff). Workers whose job already
+    exists keep polling and downloading meanwhile -- that overlap is where the
+    parallel speed-up comes from."""
+
+    def __init__(self, pace: float, rl_wait: float, max_wait: float):
+        self._pace, self._rl_wait, self._max_wait = pace, rl_wait, max_wait
+        self._create_lock = threading.Lock()
+        self._state = threading.Lock()
+        self._next_ok = 0.0
+        self._strikes = 0
+
+    def before_create(self) -> None:
+        with self._create_lock:
+            while True:
+                with self._state:
+                    wait = self._next_ok - time.monotonic()
+                    if wait <= 0:
+                        self._next_ok = time.monotonic() + self._pace
+                        return
+                time.sleep(min(wait, 5.0))
+
+    def rate_limited(self) -> float:
+        with self._state:
+            self._strikes += 1
+            wait = min(self._rl_wait * (2 ** (self._strikes - 1)), self._max_wait)
+            self._next_ok = max(self._next_ok, time.monotonic() + wait)
+            return wait
+
+    def succeeded(self) -> None:
+        with self._state:
+            self._strikes = 0
 
 
 def _already_cached(symbol: str, start: str, end: str) -> bool:
@@ -127,12 +170,16 @@ def main() -> int:
     parser.add_argument("--end", default=END_DATE)
     parser.add_argument("--retries", type=int, default=3, help="attempts per symbol (ordinary errors)")
     parser.add_argument("--retry-wait", type=float, default=30.0, help="seconds between ordinary attempts")
-    parser.add_argument("--pace", type=float, default=60.0,
-                        help="seconds to wait between symbols, to avoid tripping the export quota")
+    parser.add_argument("--workers", type=int, default=6,
+                        help="chunks processed in parallel (jobs build and download concurrently)")
+    parser.add_argument("--pace", type=float, default=20.0,
+                        help="minimum seconds between creating two export jobs (global, all workers)")
     parser.add_argument("--rate-limit-wait", type=float, default=600.0,
                         help="first backoff after a 429, in seconds (doubles each time)")
-    parser.add_argument("--rate-limit-retries", type=int, default=6,
-                        help="how many times to wait out a 429 before giving up on a symbol")
+    # 20 waits = 10+20+40 min, then 17 x 60 min ~= 18h: enough to leave the
+    # pull running overnight without it giving up on the quota.
+    parser.add_argument("--rate-limit-retries", type=int, default=20,
+                        help="how many times to wait out a 429 before giving up on a chunk")
     parser.add_argument("--max-wait", type=float, default=3600.0,
                         help="cap on any single backoff, in seconds")
     parser.add_argument("--force", action="store_true", help="re-download even if cached")
@@ -174,84 +221,78 @@ def main() -> int:
         print("Each symbol is a server-side export job (up to 30 min); budget hours, not minutes.")
         return 0
 
-    print(f"\nfetching {len(todo)} symbol(s); cached symbols are skipped, so re-running is cheap.\n")
+    tasks = [(sym, cs, ce) for sym in todo for (cs, ce) in _chunk_ranges(args.start, args.end)]
+    print(f"\nfetching {len(todo)} symbol(s) = {len(tasks)} chunk(s) with {args.workers} worker(s); "
+          f"cached chunks are skipped, so re-running is cheap.\n", flush=True)
     started = time.monotonic()
-    ok, failed = [], []
+    gate = QuotaGate(args.pace, args.rate_limit_wait, args.max_wait)
+    local = threading.local()
+    counter = {"done": 0}
+    counter_lock = threading.Lock()
 
-    for i, symbol in enumerate(todo, start=1):
-        # Pace between symbols so the export quota is not tripped in the
-        # first place. Cheaper than recovering from a 429, which costs tens
-        # of minutes of waiting.
-        if i > 1 and args.pace > 0:
-            time.sleep(args.pace)
-
-        attempt = 0
+    def run_chunk(symbol: str, cs: str, ce: str) -> None:
+        if getattr(local, "client", None) is None:
+            local.client = _client()
+        attempt = rl_attempt = 0
+        tag = f"{symbol:6s} {cs}..{ce}"
         while True:
-            attempt += 1
             t0 = time.monotonic()
             try:
-                paths = fetch_1m_chunked(symbol, args.start, args.end, force=args.force)
-                rows = 0
-                for (cs, ce) in _chunk_ranges(args.start, args.end):
-                    mf = load_manifest(symbol, cs, ce)
-                    rows += mf.row_count if mf else 0
-                size_mb = sum(p.stat().st_size for p in paths) / 1e6
-                elapsed = time.monotonic() - t0
-                done = time.monotonic() - started
-                rate = i / done if done > 0 else 0
-                eta = (len(todo) - i) / rate if rate > 0 else 0
-                print(
-                    f"[{i}/{len(todo)}] {symbol:6s} OK  {rows:>10,} rows  "
-                    f"{size_mb:7.1f} MB  {len(paths)} chunk(s)  in {_fmt(elapsed)}  "
-                    f"| elapsed {_fmt(done)} | eta {_fmt(eta)}",
-                    flush=True,
-                )
-                ok.append(symbol)
-                break
-            except KeyboardInterrupt:
-                print(f"\n[SIGINT] stopped during {symbol}; cached symbols are kept. "
-                      f"Re-run to continue.", flush=True)
-                return 130
+                path = fetch_1m(symbol, cs, ce, force=args.force, client=local.client,
+                                before_create=gate.before_create)
+                gate.succeeded()
+                mf = load_manifest(symbol, cs, ce)
+                rows = mf.row_count if mf else 0
+                with counter_lock:
+                    counter["done"] += 1
+                    done = counter["done"]
+                elapsed = time.monotonic() - started
+                eta = (len(tasks) - done) * elapsed / done
+                warn = "  !! AT EXPORT CAP -- chunk may be truncated" if rows >= EXPORT_ROW_CAP else ""
+                print(f"[{done}/{len(tasks)}] {tag} OK  {rows:>10,} rows  "
+                      f"{path.stat().st_size / 1e6:7.1f} MB  in {_fmt(time.monotonic() - t0)}  "
+                      f"| elapsed {_fmt(elapsed)} | eta {_fmt(eta)}{warn}", flush=True)
+                return
             except Exception as exc:
                 if _is_fatal(exc):
-                    print(f"[{i}/{len(todo)}] {symbol:6s} FATAL (will never succeed): "
-                          f"{str(exc)[:160]}", file=sys.stderr, flush=True)
-                    failed.append((symbol, f"{type(exc).__name__}: {exc}"))
-                    break
-
+                    raise RuntimeError(f"FATAL (will never succeed): {exc}") from exc
                 if _is_rate_limit(exc):
-                    if attempt > args.rate_limit_retries:
-                        failed.append((symbol, "rate limited; quota did not clear"))
-                        print(f"[{i}/{len(todo)}] {symbol:6s} giving up after "
-                              f"{args.rate_limit_retries} rate-limit waits",
-                              file=sys.stderr, flush=True)
-                        break
-                    # escalating backoff: the quota window is long (measured
-                    # >10 min), so waits grow rather than hammering the API
-                    wait = min(args.rate_limit_wait * (2 ** (attempt - 1)), args.max_wait)
-                    print(
-                        f"[{i}/{len(todo)}] {symbol:6s} RATE LIMITED "
-                        f"(wait {attempt}/{args.rate_limit_retries}) -- sleeping {_fmt(wait)}. "
-                        f"Cached symbols are safe; Ctrl-C and re-run later is equally fine.",
-                        file=sys.stderr, flush=True,
-                    )
-                    try:
-                        time.sleep(wait)
-                    except KeyboardInterrupt:
-                        print("\n[SIGINT] stopped while waiting out the rate limit; "
-                              "re-run to continue.", flush=True)
-                        return 130
-                    continue
-
+                    rl_attempt += 1
+                    if rl_attempt > args.rate_limit_retries:
+                        raise RuntimeError("rate limited; quota did not clear") from exc
+                    wait = gate.rate_limited()
+                    print(f"{tag} RATE LIMITED -- all workers pause new exports for {_fmt(wait)} "
+                          f"(jobs already created keep building/downloading)",
+                          file=sys.stderr, flush=True)
+                    continue  # before_create blocks until the window has passed
+                attempt += 1
                 if attempt > args.retries:
-                    failed.append((symbol, f"{type(exc).__name__}: {exc}"))
-                    break
-                print(
-                    f"[{i}/{len(todo)}] {symbol:6s} attempt {attempt}/{args.retries} failed: "
-                    f"{type(exc).__name__}: {str(exc)[:160]}",
-                    file=sys.stderr, flush=True,
-                )
+                    raise
+                print(f"{tag} attempt {attempt}/{args.retries} failed: "
+                      f"{type(exc).__name__}: {str(exc)[:160]}", file=sys.stderr, flush=True)
                 time.sleep(args.retry_wait)
+
+    ok_chunks, failed = set(), []
+    pool = ThreadPoolExecutor(max_workers=args.workers)
+    futures = {pool.submit(run_chunk, *t): t for t in tasks}
+    try:
+        for fut in as_completed(futures):
+            symbol, cs, ce = futures[fut]
+            try:
+                fut.result()
+                ok_chunks.add((symbol, cs, ce))
+            except Exception as exc:
+                failed.append((f"{symbol} {cs}..{ce}", f"{type(exc).__name__}: {exc}"))
+                print(f"{symbol:6s} {cs}..{ce} FAILED: {str(exc)[:200]}", file=sys.stderr, flush=True)
+    except KeyboardInterrupt:
+        # Export job ids are on disk (data/raw/1m/.jobs), so nothing is lost:
+        # a re-run resumes waiting/downloading instead of creating new jobs.
+        print("\n[SIGINT] stopping. Finished chunks and in-flight export job ids are kept; "
+              "re-run to continue.", flush=True)
+        os._exit(130)
+    pool.shutdown()
+    ok = sorted(s_ for s_ in todo if all((s_, cs, ce) in ok_chunks
+                                         for cs, ce in _chunk_ranges(args.start, args.end)))
 
     print()
     print(f"fetched : {len(ok)}")
