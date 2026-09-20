@@ -37,6 +37,9 @@ rad/*.out
 rad/*.run.xml
 rad/*.toc
 
+# Step logs written by scripts/run_all.ps1
+/logs/
+
 # Run output (large, regenerable by re-running the pipeline): forecast
 # tables, per-horizon daily losses and the report artefacts. 16 GB at the
 # time of writing -- the provenance that matters (manifest.json with the
