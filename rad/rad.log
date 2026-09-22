@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999998 (MiKTeX 26.5) (preloaded format=xelatex 2026.9.19)  22 SEP 2026 19:16
+This is XeTeX, Version 3.141592653-2.6-0.999998 (MiKTeX 26.5) (preloaded format=xelatex 2026.9.19)  22 SEP 2026 19:29
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1957,7 +1957,7 @@ Space,Scale=0.92,Script=Cyrillic,Language=Serbian].
 LaTeX Font Info:    Font shape `TU/Consolas(2)/m/n' will be
 (Font)              scaled to size 11.03998pt on input line 435.
  [14] [15] [16]
-Overfull \hbox (15.43513pt too wide) in paragraph at lines 566--569
+Overfull \hbox (15.43513pt too wide) in paragraph at lines 567--570
 []\TU/TimesNewRoman(1)/m/n/12 Корекција $[]$ оцењује се на клизном прозору рани
 јих ван-- узорачких грешака (одељак []2.5.2[]),
  []
@@ -2315,7 +2315,7 @@ Package fontspec Info:
 (fontspec)             Consolas scale = 0.92.
 
 
-Underfull \hbox (badness 3536) in paragraph at lines 621--621
+Underfull \hbox (badness 3536) in paragraph at lines 622--622
 \TU/TimesNewRoman(1)/m/n/12 стору, повратна трансформација
  []
 
@@ -2378,8 +2378,11 @@ Package fontspec Info:
 (fontspec)             Consolas scale = 0.92.
 
 
-Package fontspec Info: 
-(fontspec)             Consolas scale = 0.92.
+Overfull \hbox (73.36476pt too wide) in paragraph at lines 850--859
+[]\TU/TimesNewRoman(1)/m/n/12 2024[]), са \TU/TimesNewRoman(1)/b/n/12 фиксирано
+м верзијом \TU/TimesNewRoman(1)/m/n/12 контролне тачке: модел \TU/Consolas(2)/m
+/n/12 ibm-granite/granite-timeseries-ttm-r2\TU/TimesNewRoman(1)/m/n/12 ,
+ []
 
 
 Package fontspec Info: 
@@ -2449,8 +2452,12 @@ Package fontspec Info:
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
- [23] [24] [25]
-Overfull \hbox (2.79243pt too wide) in paragraph at lines 1017--1020
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+[23] [24] [25]
+Overfull \hbox (2.79243pt too wide) in paragraph at lines 1019--1022
 [] []\TU/TimesNewRoman(1)/b/n/12 Неслагање рангирања.[] \TU/TimesNewRoman(1)/m/
 n/12 Различит редослед по QLIKE и по MAE проглашава се ствар-
  []
@@ -2465,21 +2472,21 @@ Package fontspec Info:
 
 [26] [27]
 LaTeX Font Info:    Font shape `TU/Consolas(0)/b/n' will be
-(Font)              scaled to size 11.03998pt on input line 1081.
+(Font)              scaled to size 11.03998pt on input line 1083.
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
 LaTeX Font Info:    Font shape `TU/Consolas(1)/b/n' will be
-(Font)              scaled to size 11.03998pt on input line 1081.
+(Font)              scaled to size 11.03998pt on input line 1083.
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
 LaTeX Font Info:    Font shape `TU/Consolas(2)/b/n' will be
-(Font)              scaled to size 11.03998pt on input line 1081.
+(Font)              scaled to size 11.03998pt on input line 1083.
 
-Overfull \hbox (19.4767pt too wide) in paragraph at lines 1080--1084
+Overfull \hbox (19.4767pt too wide) in paragraph at lines 1082--1086
 []\TU/TimesNewRoman(1)/m/n/12 Унапред декларисана породица јесте \TU/TimesNewRo
 man(1)/b/n/12 сваки модел наспрам референтног модела \TU/Consolas(2)/b/n/12 log
 _har\TU/TimesNewRoman(1)/m/n/12 ,
@@ -2503,7 +2510,7 @@ Package fontspec Info:
 (fontspec)             Consolas scale = 0.92.
 
 
-Overfull \hbox (35.57703pt too wide) in paragraph at lines 1117--1120
+Overfull \hbox (35.57703pt too wide) in paragraph at lines 1119--1122
 \TU/TimesNewRoman(1)/m/n/12 висе од све три димензије мерења (HAR-- J, CHAR, Li
 ghtGBM, XGBoost, \TU/Consolas(2)/m/n/12 ttm_c\TU/TimesNewRoman(1)/m/n/12 , \TU/
 Consolas(2)/m/n/12 ttm_c_plus_j\TU/TimesNewRoman(1)/m/n/12 ).
@@ -2752,87 +2759,41 @@ Package fontspec Info:
 
 [48
 
-] [49]
-Overfull \hbox (23.5501pt too wide) in paragraph at lines 155--177
+]
+File: slike/udeo_skokova.pdf Graphic file (type pdf)
+<use slike/udeo_skokova.pdf>
+ [49] [50]
+Overfull \hbox (23.5501pt too wide) in paragraph at lines 151--173
  [][] 
  []
 
-[50] [51] [52]
+[51] [52] [53]
 LaTeX Font Info:    Font shape `TU/CambriaMath(2)/m/n' will be
-(Font)              scaled to size 10.95116pt on input line 302.
+(Font)              scaled to size 10.95116pt on input line 298.
 LaTeX Font Info:    Font shape `TU/CambriaMath(2)/m/n' will be
-(Font)              scaled to size 8.00085pt on input line 302.
+(Font)              scaled to size 8.00085pt on input line 298.
 LaTeX Font Info:    Font shape `TU/CambriaMath(2)/m/n' will be
-(Font)              scaled to size 6.00064pt on input line 302.
+(Font)              scaled to size 6.00064pt on input line 298.
 LaTeX Font Info:    Font shape `TU/CambriaMath(3)/m/n' will be
-(Font)              scaled to size 10.94882pt on input line 302.
+(Font)              scaled to size 10.94882pt on input line 298.
 LaTeX Font Info:    Font shape `TU/CambriaMath(3)/m/n' will be
-(Font)              scaled to size 7.99915pt on input line 302.
+(Font)              scaled to size 7.99915pt on input line 298.
 LaTeX Font Info:    Font shape `TU/CambriaMath(3)/m/n' will be
-(Font)              scaled to size 5.99936pt on input line 302.
+(Font)              scaled to size 5.99936pt on input line 298.
 LaTeX Font Info:    Font shape `TU/Consolas(0)/m/n' will be
-(Font)              scaled to size 10.07397pt on input line 304.
+(Font)              scaled to size 10.07397pt on input line 300.
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
 LaTeX Font Info:    Font shape `TU/Consolas(1)/m/n' will be
-(Font)              scaled to size 10.07397pt on input line 304.
+(Font)              scaled to size 10.07397pt on input line 300.
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
 LaTeX Font Info:    Font shape `TU/Consolas(2)/m/n' will be
-(Font)              scaled to size 10.07397pt on input line 304.
-
-Package fontspec Info: 
-(fontspec)             Consolas scale = 0.92.
-
-
-Package fontspec Info: 
-(fontspec)             Consolas scale = 0.92.
-
-
-Package fontspec Info: 
-(fontspec)             Consolas scale = 0.92.
-
-
-Package fontspec Info: 
-(fontspec)             Consolas scale = 0.92.
-
-
-Package fontspec Info: 
-(fontspec)             Consolas scale = 0.92.
-
-
-Package fontspec Info: 
-(fontspec)             Consolas scale = 0.92.
-
- [53]
-
-Package fontspec Info: 
-(fontspec)             Consolas scale = 0.92.
-
-
-Package fontspec Info: 
-(fontspec)             Consolas scale = 0.92.
-
-
-Package fontspec Info: 
-(fontspec)             Consolas scale = 0.92.
-
-
-Package fontspec Info: 
-(fontspec)             Consolas scale = 0.92.
-
-
-Package fontspec Info: 
-(fontspec)             Consolas scale = 0.92.
-
-
-Package fontspec Info: 
-(fontspec)             Consolas scale = 0.92.
-
+(Font)              scaled to size 10.07397pt on input line 300.
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
@@ -2906,7 +2867,6 @@ Package fontspec Info:
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
- [55]
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
@@ -2923,7 +2883,8 @@ Package fontspec Info:
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
- [56] [57] [58] [59] [60] [61]
+File: slike/udeli_varijanse.pdf Graphic file (type pdf)
+<use slike/udeli_varijanse.pdf>
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
@@ -2940,18 +2901,80 @@ Package fontspec Info:
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
- [62])
-(poglavlja/05-zakljucak.tex [63]
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+ [55] [56]
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+ [57] [58] [59] [60] [61] [62]
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+ [63])
+(poglavlja/05-zakljucak.tex [64]
 Глава 5.
-[64
+[65
 
-] [65]) [66] [67
+] [66]) [67] [68
 
-] [68] (poglavlja/06-prilog.tex [69]
-
-Package fontspec Info: 
-(fontspec)             Consolas scale = 0.92.
-
+] [69] (poglavlja/06-prilog.tex [70]
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
@@ -2964,27 +2987,31 @@ Package fontspec Info:
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
- [70
 
-] [71]) [72]
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+ [71
+
+] [72]) [73]
 (rad.aux)
  ***********
 LaTeX2e <2026-06-01>
 L3 programming layer <2026-08-10>
  ***********
 Package rerunfilecheck Info: File `rad.out' has not changed.
-(rerunfilecheck)             Checksum: E4F8FAD6A0024111738C55E9BCB34441;24133.
+(rerunfilecheck)             Checksum: 5DD505ACB8404A52EB47FAD3E8D961B5;24133.
 Package logreq Info: Writing requests to 'rad.run.xml'.
 \openout1 = `rad.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 40329 strings out of 402560
- 802962 string characters out of 5437924
- 1963707 words of memory out of 5000000
- 68878 multiletter control sequences out of 15000+600000
+ 40349 strings out of 402560
+ 803518 string characters out of 5437924
+ 1960152 words of memory out of 5000000
+ 68895 multiletter control sequences out of 15000+600000
  632985 words of font info for 171 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  97i,19n,116p,1198b,7043s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on rad.pdf (80 pages).
+Output written on rad.pdf (81 pages).
