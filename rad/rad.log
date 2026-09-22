@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999998 (MiKTeX 26.5) (preloaded format=xelatex 2026.9.19)  20 SEP 2026 13:38
+This is XeTeX, Version 3.141592653-2.6-0.999998 (MiKTeX 26.5) (preloaded format=xelatex 2026.9.19)  22 SEP 2026 17:15
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -778,57 +778,64 @@ Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
 \@lastruleclass=\count323
 \@thisrulewidth=\dimen185
 )
+(C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/multirow\multirow.sty
+Package: multirow 2024/11/12 v2.9 Span multiple rows of a table
+\multirow@colwidth=\skip56
+\multirow@cntb=\count324
+\multirow@dima=\skip57
+\bigstrutjot=\dimen186
+)
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/tools\tabularx.sty
 Package: tabularx 2023/12/11 v2.12a `tabularx' package (DPC)
 
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/tools\array.sty
 Package: array 2026/02/24 v2.7b Tabular extension package (FMi)
-\col@sep=\dimen186
+\col@sep=\dimen187
 \ar@mcellbox=\box57
-\extrarowheight=\dimen187
+\extrarowheight=\dimen188
 \NC@list=\toks27
-\extratabsurround=\skip56
-\backup@length=\skip57
+\extratabsurround=\skip58
+\backup@length=\skip59
 \ar@cellbox=\box58
 )
-\TX@col@width=\dimen188
-\TX@old@table=\dimen189
-\TX@old@col=\dimen190
-\TX@target=\dimen191
-\TX@delta=\dimen192
-\TX@cols=\count324
+\TX@col@width=\dimen189
+\TX@old@table=\dimen190
+\TX@old@col=\dimen191
+\TX@target=\dimen192
+\TX@delta=\dimen193
+\TX@cols=\count325
 \TX@ftn=\toks28
 )
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/tools\longtable.sty
 Package: longtable 2026-01-28 v4.27 Multi-page Table package (DPC)
-\LTleft=\skip58
-\LTright=\skip59
-\LTpre=\skip60
-\LTpost=\skip61
-\LTchunksize=\count325
-\LTcapwidth=\dimen193
+\LTleft=\skip60
+\LTright=\skip61
+\LTpre=\skip62
+\LTpost=\skip63
+\LTchunksize=\count326
+\LTcapwidth=\dimen194
 \LT@head=\box59
 \LT@firsthead=\box60
 \LT@foot=\box61
 \LT@lastfoot=\box62
 \LT@gbox=\box63
-\LT@cols=\count326
-\LT@rows=\count327
-\c@LT@tables=\count328
-\c@LT@chunks=\count329
+\LT@cols=\count327
+\LT@rows=\count328
+\c@LT@tables=\count329
+\c@LT@chunks=\count330
 \LT@p@ftn=\toks29
 )
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/titlesec\titlesec.sty
 Package: titlesec 2025/01/04 v2.17 Sectioning titles
 \ttl@box=\box64
-\beforetitleunit=\skip62
-\aftertitleunit=\skip63
-\ttl@plus=\dimen194
-\ttl@minus=\dimen195
+\beforetitleunit=\skip64
+\aftertitleunit=\skip65
+\ttl@plus=\dimen195
+\ttl@minus=\dimen196
 \ttl@toksa=\toks30
-\titlewidth=\dimen196
-\titlewidthlast=\dimen197
-\titlewidthfirst=\dimen198
+\titlewidth=\dimen197
+\titlewidthlast=\dimen198
+\titlewidthfirst=\dimen199
 )
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hyperref.sty
 Package: hyperref 2026-06-17 v7.01r Hypertext links for LaTeX
@@ -876,22 +883,22 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/kvoptions\kvoptions.sty
 Package: kvoptions 2022-06-15 v3.15 Key value format for package options (HO)
 ))
-\c@section@level=\count330
+\c@section@level=\count331
 )
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/stringenc\stringenc.s
 ty
 Package: stringenc 2019/11/29 v1.12 Convert strings between diff. encodings (HO
 )
 )
-\@linkdim=\dimen199
-\Hy@linkcounter=\count331
-\Hy@pagecounter=\count332
+\@linkdim=\dimen256
+\Hy@linkcounter=\count332
+\Hy@pagecounter=\count333
  (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\pd1enc.def
 File: pd1enc.def 2026-06-17 v7.01r Hyperref: PDFDocEncoding definition (HO)
 ) (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/intcalc\intcalc.sty
 Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
 )
-\Hy@SavedSpaceFactor=\count333
+\Hy@SavedSpaceFactor=\count334
  (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\puenc.def
 File: puenc.def 2026-06-17 v7.01r Hyperref: PDF Unicode definition (HO)
 )
@@ -902,14 +909,14 @@ Package hyperref Info: Plain pages OFF on input line 4214.
 Package hyperref Info: Backreferencing OFF on input line 4219.
 Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
 Package hyperref Info: Bookmarks ON on input line 4466.
-\c@Hy@tempcnt=\count334
+\c@Hy@tempcnt=\count335
 
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty
 \Urlmuskip=\muskip19
 Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
 )
 LaTeX Info: Redefining \url on input line 4805.
-\XeTeXLinkMargin=\dimen256
+\XeTeXLinkMargin=\dimen257
 
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/bitset\bitset.sty
 Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
@@ -919,9 +926,9 @@ Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
 Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO
 )
 ))
-\Fld@menulength=\count335
-\Field@Width=\dimen257
-\Fld@charsize=\dimen258
+\Fld@menulength=\count336
+\Field@Width=\dimen258
+\Fld@charsize=\dimen259
 Package hyperref Info: Hyper figures OFF on input line 6091.
 Package hyperref Info: Link nesting OFF on input line 6096.
 Package hyperref Info: Hyper index ON on input line 6099.
@@ -929,19 +936,19 @@ Package hyperref Info: backreferencing OFF on input line 6106.
 Package hyperref Info: Link coloring OFF on input line 6111.
 Package hyperref Info: Link coloring with OCG OFF on input line 6116.
 Package hyperref Info: PDF/A mode OFF on input line 6121.
-\Hy@abspage=\count336
-\c@Item=\count337
-\c@Hfootnote=\count338
+\Hy@abspage=\count337
+\c@Item=\count338
+\c@Hfootnote=\count339
 )
 Package hyperref Info: Driver (autodetected): hxetex.
 
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hxetex.def
 File: hxetex.def 2026-06-17 v7.01r Hyperref driver for XeTeX
 \pdfm@box=\box65
-\c@Hy@AnnotLevel=\count339
-\HyField@AnnotCount=\count340
-\Fld@listcount=\count341
-\c@bookmark@seq@number=\count342
+\c@Hy@AnnotLevel=\count340
+\HyField@AnnotCount=\count341
+\Fld@listcount=\count342
+\c@bookmark@seq@number=\count343
 
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/rerunfilecheck\rerunfil
 echeck.sty
@@ -954,25 +961,25 @@ Package: uniquecounter 2019/12/15 v1.4 Provide unlimited unique counter (HO)
 Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 84.
 )
-\Hy@SectionHShift=\skip64
+\Hy@SectionHShift=\skip66
 )
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption.sty
 Package: caption 2023/08/05 v3.6o Customizing captions (AR)
 
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/caption\caption3.sty
 Package: caption3 2023/07/31 v2.4d caption3 kernel (AR)
-\caption@tempdima=\dimen259
-\captionmargin=\dimen260
-\caption@leftmargin=\dimen261
-\caption@rightmargin=\dimen262
-\caption@width=\dimen263
-\caption@indent=\dimen264
-\caption@parindent=\dimen265
-\caption@hangindent=\dimen266
+\caption@tempdima=\dimen260
+\captionmargin=\dimen261
+\caption@leftmargin=\dimen262
+\caption@rightmargin=\dimen263
+\caption@width=\dimen264
+\caption@indent=\dimen265
+\caption@parindent=\dimen266
+\caption@hangindent=\dimen267
 Package caption Info: Standard document class detected.
 )
-\c@caption@flags=\count343
-\c@continuedfloat=\count344
+\c@caption@flags=\count344
+\c@continuedfloat=\count345
 Package caption Info: hyperref package is loaded.
 Package caption Info: longtable package is loaded.
 
@@ -997,8 +1004,8 @@ Package graphics Info: Driver file: xetex.def on input line 106.
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/graphics-def\xetex.def
 File: xetex.def 2025/11/01 v5.0p Graphics/color driver for xetex
 ))
-\Gin@req@height=\dimen267
-\Gin@req@width=\dimen268
+\Gin@req@height=\dimen268
+\Gin@req@width=\dimen269
 ) (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/xcolor\xcolor.sty
 Package: xcolor 2024/09/29 v3.02 LaTeX color extensions (UK)
 
@@ -1024,8 +1031,8 @@ y
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfutil
 -common.tex
 \pgfutil@everybye=\toks31
-\pgfutil@tempdima=\dimen269
-\pgfutil@tempdimb=\dimen270
+\pgfutil@tempdima=\dimen270
+\pgfutil@tempdimb=\dimen271
 )
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfutil
 -latex.def
@@ -1055,26 +1062,26 @@ Package: pgfsys 2026-08-01 v3.1.12 (3.1.12)
 libraryfiltered.code.tex
 \pgfkeys@tmptoks=\toks34
 ))
-\pgf@x=\dimen271
-\pgf@y=\dimen272
-\pgf@xa=\dimen273
-\pgf@ya=\dimen274
-\pgf@xb=\dimen275
-\pgf@yb=\dimen276
-\pgf@xc=\dimen277
-\pgf@yc=\dimen278
-\pgf@xd=\dimen279
-\pgf@yd=\dimen280
+\pgf@x=\dimen272
+\pgf@y=\dimen273
+\pgf@xa=\dimen274
+\pgf@ya=\dimen275
+\pgf@xb=\dimen276
+\pgf@yb=\dimen277
+\pgf@xc=\dimen278
+\pgf@yc=\dimen279
+\pgf@xd=\dimen280
+\pgf@yd=\dimen281
 \w@pgf@writea=\write3
 \r@pgf@reada=\read2
-\c@pgf@counta=\count345
-\c@pgf@countb=\count346
-\c@pgf@countc=\count347
-\c@pgf@countd=\count348
+\c@pgf@counta=\count346
+\c@pgf@countb=\count347
+\c@pgf@countc=\count348
+\c@pgf@countd=\count349
 \t@pgf@toka=\toks35
 \t@pgf@tokb=\toks36
 \t@pgf@tokc=\toks37
-\pgf@sys@id@count=\count349
+\pgf@sys@id@count=\count350
 
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgf.c
 fg
@@ -1094,13 +1101,13 @@ File: pgfsys-dvipdfmx.def 2026-08-01 v3.1.12 (3.1.12)
 s-common-pdf.def
 File: pgfsys-common-pdf.def 2026-08-01 v3.1.12 (3.1.12)
 )
-\pgfsys@objnum=\count350
+\pgfsys@objnum=\count351
 )))
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsy
 ssoftpath.code.tex
 File: pgfsyssoftpath.code.tex 2026-08-01 v3.1.12 (3.1.12)
-\pgfsyssoftpath@smallbuffer@items=\count351
-\pgfsyssoftpath@bigbuffer@items=\count352
+\pgfsyssoftpath@smallbuffer@items=\count352
+\pgfsyssoftpath@bigbuffer@items=\count353
 )
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsy
 sprotocol.code.tex
@@ -1116,8 +1123,8 @@ Package: pgfcore 2026-08-01 v3.1.12 (3.1.12)
 code.tex)
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathparse
 r.code.tex
-\pgfmath@dimen=\dimen281
-\pgfmath@count=\count353
+\pgfmath@dimen=\dimen282
+\pgfmath@count=\count354
 \pgfmath@box=\box67
 \pgfmath@toks=\toks38
 \pgfmath@stack@operand=\toks39
@@ -1145,39 +1152,39 @@ ions.integerarithmetics.code.tex)
 code.tex)
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfloat
 .code.tex
-\c@pgfmathroundto@lastzeros=\count354
+\c@pgfmathroundto@lastzeros=\count355
 ))
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfint.code.
 tex)
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
 epoints.code.tex
 File: pgfcorepoints.code.tex 2026-08-01 v3.1.12 (3.1.12)
-\pgf@picminx=\dimen282
-\pgf@picmaxx=\dimen283
-\pgf@picminy=\dimen284
-\pgf@picmaxy=\dimen285
-\pgf@pathminx=\dimen286
-\pgf@pathmaxx=\dimen287
-\pgf@pathminy=\dimen288
-\pgf@pathmaxy=\dimen289
-\pgf@xx=\dimen290
-\pgf@xy=\dimen291
-\pgf@yx=\dimen292
-\pgf@yy=\dimen293
-\pgf@zx=\dimen294
-\pgf@zy=\dimen295
+\pgf@picminx=\dimen283
+\pgf@picmaxx=\dimen284
+\pgf@picminy=\dimen285
+\pgf@picmaxy=\dimen286
+\pgf@pathminx=\dimen287
+\pgf@pathmaxx=\dimen288
+\pgf@pathminy=\dimen289
+\pgf@pathmaxy=\dimen290
+\pgf@xx=\dimen291
+\pgf@xy=\dimen292
+\pgf@yx=\dimen293
+\pgf@yy=\dimen294
+\pgf@zx=\dimen295
+\pgf@zy=\dimen296
 )
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
 epathconstruct.code.tex
 File: pgfcorepathconstruct.code.tex 2026-08-01 v3.1.12 (3.1.12)
-\pgf@path@lastx=\dimen296
-\pgf@path@lasty=\dimen297
+\pgf@path@lastx=\dimen297
+\pgf@path@lasty=\dimen298
 )
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
 epathusage.code.tex
 File: pgfcorepathusage.code.tex 2026-08-01 v3.1.12 (3.1.12)
-\pgf@shorten@end@additional=\dimen298
-\pgf@shorten@start@additional=\dimen299
+\pgf@shorten@end@additional=\dimen299
+\pgf@shorten@start@additional=\dimen300
 )
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
 escopes.code.tex
@@ -1185,19 +1192,19 @@ File: pgfcorescopes.code.tex 2026-08-01 v3.1.12 (3.1.12)
 \pgfpic=\box68
 \pgf@hbox=\box69
 \pgf@layerbox@main=\box70
-\pgf@picture@serial@count=\count355
+\pgf@picture@serial@count=\count356
 )
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
 egraphicstate.code.tex
 File: pgfcoregraphicstate.code.tex 2026-08-01 v3.1.12 (3.1.12)
-\pgflinewidth=\dimen300
+\pgflinewidth=\dimen301
 )
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
 etransformations.code.tex
 File: pgfcoretransformations.code.tex 2026-08-01 v3.1.12 (3.1.12)
-\pgf@pt@x=\dimen301
-\pgf@pt@y=\dimen302
-\pgf@pt@temp=\dimen303
+\pgf@pt@x=\dimen302
+\pgf@pt@y=\dimen303
+\pgf@pt@temp=\dimen304
 )
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
 equick.code.tex
@@ -1214,14 +1221,14 @@ File: pgfcorepathprocessing.code.tex 2026-08-01 v3.1.12 (3.1.12)
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
 earrows.code.tex
 File: pgfcorearrows.code.tex 2026-08-01 v3.1.12 (3.1.12)
-\pgfarrowsep=\dimen304
+\pgfarrowsep=\dimen305
 )
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
 eshade.code.tex
 File: pgfcoreshade.code.tex 2026-08-01 v3.1.12 (3.1.12)
-\pgf@max=\dimen305
-\pgf@sys@shading@range@num=\count356
-\pgf@shadingcount=\count357
+\pgf@max=\dimen306
+\pgf@sys@shading@range@num=\count357
+\pgf@shadingcount=\count358
 )
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
 eimage.code.tex
@@ -1260,8 +1267,8 @@ File: pgfmoduleplot.code.tex 2026-08-01 v3.1.12 (3.1.12)
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/pgf/compatibility\pgfco
 mp-version-0-65.sty
 Package: pgfcomp-version-0-65 2026-08-01 v3.1.12 (3.1.12)
-\pgf@nodesepstart=\dimen306
-\pgf@nodesepend=\dimen307
+\pgf@nodesepstart=\dimen307
+\pgf@nodesepend=\dimen308
 )
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/pgf/compatibility\pgfco
 mp-version-1-18.sty
@@ -1279,8 +1286,8 @@ ty
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgffor.
 code.tex
 Package: pgffor 2026-08-01 v3.1.12 (3.1.12)
-\pgffor@iter=\dimen308
-\pgffor@skip=\dimen309
+\pgffor@iter=\dimen309
+\pgffor@skip=\dimen310
 \pgffor@stack=\toks41
 \pgffor@toks=\toks42
 ))
@@ -1291,34 +1298,34 @@ Package: tikz 2026-08-01 v3.1.12 (3.1.12)
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflibr
 aryplothandlers.code.tex
 File: pgflibraryplothandlers.code.tex 2026-08-01 v3.1.12 (3.1.12)
-\pgf@plot@mark@count=\count358
-\pgfplotmarksize=\dimen310
+\pgf@plot@mark@count=\count359
+\pgfplotmarksize=\dimen311
 )
-\tikz@lastx=\dimen311
-\tikz@lasty=\dimen312
-\tikz@lastxsaved=\dimen313
-\tikz@lastysaved=\dimen314
-\tikz@lastmovetox=\dimen315
-\tikz@lastmovetoy=\dimen316
-\tikzleveldistance=\dimen317
-\tikzsiblingdistance=\dimen318
+\tikz@lastx=\dimen312
+\tikz@lasty=\dimen313
+\tikz@lastxsaved=\dimen314
+\tikz@lastysaved=\dimen315
+\tikz@lastmovetox=\dimen316
+\tikz@lastmovetoy=\dimen317
+\tikzleveldistance=\dimen318
+\tikzsiblingdistance=\dimen319
 \tikz@figbox=\box73
 \tikz@figbox@bg=\box74
 \tikz@tempbox=\box75
 \tikz@tempbox@bg=\box76
-\tikztreelevel=\count359
-\tikznumberofchildren=\count360
-\tikznumberofcurrentchild=\count361
-\tikz@fig@count=\count362
+\tikztreelevel=\count360
+\tikznumberofchildren=\count361
+\tikznumberofcurrentchild=\count362
+\tikz@fig@count=\count363
 
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodule
 matrix.code.tex
 File: pgfmodulematrix.code.tex 2026-08-01 v3.1.12 (3.1.12)
-\pgfmatrixcurrentrow=\count363
-\pgfmatrixcurrentcolumn=\count364
-\pgf@matrix@numberofcolumns=\count365
+\pgfmatrixcurrentrow=\count364
+\pgfmatrixcurrentcolumn=\count365
+\pgf@matrix@numberofcolumns=\count366
 )
-\tikz@expandcount=\count366
+\tikz@expandcount=\count367
 
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tik
 z/libraries\tikzlibrarytopaths.code.tex
@@ -1327,10 +1334,10 @@ File: tikzlibrarytopaths.code.tex 2026-08-01 v3.1.12 (3.1.12)
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflibr
 aryarrows.meta.code.tex
 File: pgflibraryarrows.meta.code.tex 2026-08-01 v3.1.12 (3.1.12)
-\pgfarrowinset=\dimen319
-\pgfarrowlength=\dimen320
-\pgfarrowwidth=\dimen321
-\pgfarrowlinewidth=\dimen322
+\pgfarrowinset=\dimen320
+\pgfarrowlength=\dimen321
+\pgfarrowwidth=\dimen322
+\pgfarrowlinewidth=\dimen323
 )
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tik
 z/libraries\tikzlibrarypositioning.code.tex
@@ -1351,7 +1358,7 @@ Package: biblatex 2026/08/13 v3.22 programmable bibliographies (PK/MW)
 
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/logreq\logreq.sty
 Package: logreq 2010/08/04 v1.0 xml request logger
-\lrq@indent=\count367
+\lrq@indent=\count368
 
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/logreq\logreq.def
 File: logreq.def 2010/08/04 v1.0 logreq spec v1.0
@@ -1359,63 +1366,63 @@ File: logreq.def 2010/08/04 v1.0 logreq spec v1.0
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/base\ifthen.sty
 Package: ifthen 2024/03/16 v1.1e Standard LaTeX ifthen package (DPC)
 )
-\c@tabx@nest=\count368
-\c@listtotal=\count369
-\c@listcount=\count370
-\c@liststart=\count371
-\c@liststop=\count372
-\c@citecount=\count373
-\c@citetotal=\count374
-\c@multicitecount=\count375
-\c@multicitetotal=\count376
-\c@instcount=\count377
-\c@maxnames=\count378
-\c@minnames=\count379
-\c@maxitems=\count380
-\c@minitems=\count381
-\c@citecounter=\count382
-\c@maxcitecounter=\count383
-\c@savedcitecounter=\count384
-\c@uniquelist=\count385
-\c@uniquename=\count386
-\c@refsection=\count387
-\c@refsegment=\count388
-\c@maxextratitle=\count389
-\c@maxextratitleyear=\count390
-\c@maxextraname=\count391
-\c@maxextradate=\count392
-\c@maxextraalpha=\count393
-\c@abbrvpenalty=\count394
-\c@highnamepenalty=\count395
-\c@lownamepenalty=\count396
-\c@maxparens=\count397
-\c@parenlevel=\count398
-\blx@tempcnta=\count399
-\blx@tempcntb=\count400
-\blx@tempcntc=\count401
-\c@blx@maxsection=\count402
-\blx@maxsegment@0=\count403
-\blx@notetype=\count404
-\blx@parenlevel@text=\count405
-\blx@parenlevel@foot=\count406
-\blx@sectionciteorder@0=\count407
-\blx@sectionciteorderinternal@0=\count408
-\blx@entrysetcounter=\count409
-\blx@biblioinstance=\count410
-\labelnumberwidth=\skip65
-\labelalphawidth=\skip66
-\biblabelsep=\skip67
-\bibitemsep=\skip68
-\bibnamesep=\skip69
-\bibinitsep=\skip70
-\bibparsep=\skip71
-\bibhang=\skip72
+\c@tabx@nest=\count369
+\c@listtotal=\count370
+\c@listcount=\count371
+\c@liststart=\count372
+\c@liststop=\count373
+\c@citecount=\count374
+\c@citetotal=\count375
+\c@multicitecount=\count376
+\c@multicitetotal=\count377
+\c@instcount=\count378
+\c@maxnames=\count379
+\c@minnames=\count380
+\c@maxitems=\count381
+\c@minitems=\count382
+\c@citecounter=\count383
+\c@maxcitecounter=\count384
+\c@savedcitecounter=\count385
+\c@uniquelist=\count386
+\c@uniquename=\count387
+\c@refsection=\count388
+\c@refsegment=\count389
+\c@maxextratitle=\count390
+\c@maxextratitleyear=\count391
+\c@maxextraname=\count392
+\c@maxextradate=\count393
+\c@maxextraalpha=\count394
+\c@abbrvpenalty=\count395
+\c@highnamepenalty=\count396
+\c@lownamepenalty=\count397
+\c@maxparens=\count398
+\c@parenlevel=\count399
+\blx@tempcnta=\count400
+\blx@tempcntb=\count401
+\blx@tempcntc=\count402
+\c@blx@maxsection=\count403
+\blx@maxsegment@0=\count404
+\blx@notetype=\count405
+\blx@parenlevel@text=\count406
+\blx@parenlevel@foot=\count407
+\blx@sectionciteorder@0=\count408
+\blx@sectionciteorderinternal@0=\count409
+\blx@entrysetcounter=\count410
+\blx@biblioinstance=\count411
+\labelnumberwidth=\skip67
+\labelalphawidth=\skip68
+\biblabelsep=\skip69
+\bibitemsep=\skip70
+\bibnamesep=\skip71
+\bibinitsep=\skip72
+\bibparsep=\skip73
+\bibhang=\skip74
 \blx@bcfin=\read3
 \blx@bcfout=\write4
 \blx@langwohyphens=\language79
-\c@mincomprange=\count411
-\c@maxcomprange=\count412
-\c@mincompwidth=\count413
+\c@mincomprange=\count412
+\c@maxcomprange=\count413
+\c@mincompwidth=\count414
 Package biblatex Info: Trying to load biblatex default data model...
 Package biblatex Info: ... file 'blx-dm.def' found.
 
@@ -1430,98 +1437,98 @@ File: apa.dbx 2025/08/27 v9.20 APA biblatex style data model
 )
 Package biblatex Info: Trying to load biblatex custom data model...
 Package biblatex Info: ... file 'biblatex-dm.cfg' not found.
-\c@afterword=\count414
-\c@savedafterword=\count415
-\c@annotator=\count416
-\c@savedannotator=\count417
-\c@author=\count418
-\c@savedauthor=\count419
-\c@bookauthor=\count420
-\c@savedbookauthor=\count421
-\c@commentator=\count422
-\c@savedcommentator=\count423
-\c@editor=\count424
-\c@savededitor=\count425
-\c@editora=\count426
-\c@savededitora=\count427
-\c@editorb=\count428
-\c@savededitorb=\count429
-\c@editorc=\count430
-\c@savededitorc=\count431
-\c@foreword=\count432
-\c@savedforeword=\count433
-\c@holder=\count434
-\c@savedholder=\count435
-\c@introduction=\count436
-\c@savedintroduction=\count437
-\c@namea=\count438
-\c@savednamea=\count439
-\c@nameb=\count440
-\c@savednameb=\count441
-\c@namec=\count442
-\c@savednamec=\count443
-\c@translator=\count444
-\c@savedtranslator=\count445
-\c@shortauthor=\count446
-\c@savedshortauthor=\count447
-\c@shorteditor=\count448
-\c@savedshorteditor=\count449
-\c@narrator=\count450
-\c@savednarrator=\count451
-\c@execproducer=\count452
-\c@savedexecproducer=\count453
-\c@execdirector=\count454
-\c@savedexecdirector=\count455
-\c@with=\count456
-\c@savedwith=\count457
-\c@labelname=\count458
-\c@savedlabelname=\count459
-\c@institution=\count460
-\c@savedinstitution=\count461
-\c@lista=\count462
-\c@savedlista=\count463
-\c@listb=\count464
-\c@savedlistb=\count465
-\c@listc=\count466
-\c@savedlistc=\count467
-\c@listd=\count468
-\c@savedlistd=\count469
-\c@liste=\count470
-\c@savedliste=\count471
-\c@listf=\count472
-\c@savedlistf=\count473
-\c@location=\count474
-\c@savedlocation=\count475
-\c@organization=\count476
-\c@savedorganization=\count477
-\c@origlocation=\count478
-\c@savedoriglocation=\count479
-\c@origpublisher=\count480
-\c@savedorigpublisher=\count481
-\c@publisher=\count482
-\c@savedpublisher=\count483
-\c@language=\count484
-\c@savedlanguage=\count485
-\c@origlanguage=\count486
-\c@savedoriglanguage=\count487
-\c@citation=\count488
-\c@savedcitation=\count489
-\c@pageref=\count490
-\c@savedpageref=\count491
-\shorthandwidth=\skip73
-\shortjournalwidth=\skip74
-\shortserieswidth=\skip75
-\shorttitlewidth=\skip76
-\shortauthorwidth=\skip77
-\shorteditorwidth=\skip78
-\locallabelnumberwidth=\skip79
-\locallabelalphawidth=\skip80
-\localshorthandwidth=\skip81
-\localshortjournalwidth=\skip82
-\localshortserieswidth=\skip83
-\localshorttitlewidth=\skip84
-\localshortauthorwidth=\skip85
-\localshorteditorwidth=\skip86
+\c@afterword=\count415
+\c@savedafterword=\count416
+\c@annotator=\count417
+\c@savedannotator=\count418
+\c@author=\count419
+\c@savedauthor=\count420
+\c@bookauthor=\count421
+\c@savedbookauthor=\count422
+\c@commentator=\count423
+\c@savedcommentator=\count424
+\c@editor=\count425
+\c@savededitor=\count426
+\c@editora=\count427
+\c@savededitora=\count428
+\c@editorb=\count429
+\c@savededitorb=\count430
+\c@editorc=\count431
+\c@savededitorc=\count432
+\c@foreword=\count433
+\c@savedforeword=\count434
+\c@holder=\count435
+\c@savedholder=\count436
+\c@introduction=\count437
+\c@savedintroduction=\count438
+\c@namea=\count439
+\c@savednamea=\count440
+\c@nameb=\count441
+\c@savednameb=\count442
+\c@namec=\count443
+\c@savednamec=\count444
+\c@translator=\count445
+\c@savedtranslator=\count446
+\c@shortauthor=\count447
+\c@savedshortauthor=\count448
+\c@shorteditor=\count449
+\c@savedshorteditor=\count450
+\c@narrator=\count451
+\c@savednarrator=\count452
+\c@execproducer=\count453
+\c@savedexecproducer=\count454
+\c@execdirector=\count455
+\c@savedexecdirector=\count456
+\c@with=\count457
+\c@savedwith=\count458
+\c@labelname=\count459
+\c@savedlabelname=\count460
+\c@institution=\count461
+\c@savedinstitution=\count462
+\c@lista=\count463
+\c@savedlista=\count464
+\c@listb=\count465
+\c@savedlistb=\count466
+\c@listc=\count467
+\c@savedlistc=\count468
+\c@listd=\count469
+\c@savedlistd=\count470
+\c@liste=\count471
+\c@savedliste=\count472
+\c@listf=\count473
+\c@savedlistf=\count474
+\c@location=\count475
+\c@savedlocation=\count476
+\c@organization=\count477
+\c@savedorganization=\count478
+\c@origlocation=\count479
+\c@savedoriglocation=\count480
+\c@origpublisher=\count481
+\c@savedorigpublisher=\count482
+\c@publisher=\count483
+\c@savedpublisher=\count484
+\c@language=\count485
+\c@savedlanguage=\count486
+\c@origlanguage=\count487
+\c@savedoriglanguage=\count488
+\c@citation=\count489
+\c@savedcitation=\count490
+\c@pageref=\count491
+\c@savedpageref=\count492
+\shorthandwidth=\skip75
+\shortjournalwidth=\skip76
+\shortserieswidth=\skip77
+\shorttitlewidth=\skip78
+\shortauthorwidth=\skip79
+\shorteditorwidth=\skip80
+\locallabelnumberwidth=\skip81
+\locallabelalphawidth=\skip82
+\localshorthandwidth=\skip83
+\localshortjournalwidth=\skip84
+\localshortserieswidth=\skip85
+\localshorttitlewidth=\skip86
+\localshortauthorwidth=\skip87
+\localshorteditorwidth=\skip88
 Package biblatex Info: Trying to load enhanced support for Unicode engines...
 Package biblatex Info: ... file 'blx-unicode.def' found.
 
@@ -1537,19 +1544,19 @@ Package biblatex Info: Trying to load generic definitions...
 Package biblatex Info: ... file 'biblatex.def' found.
  (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/biblatex\biblatex.def
 File: biblatex.def 2026/08/13 v3.22 biblatex compatibility (PK/MW)
-\c@textcitecount=\count492
-\c@textcitetotal=\count493
-\c@textcitemaxnames=\count494
-\c@biburlbigbreakpenalty=\count495
-\c@biburlbreakpenalty=\count496
-\c@biburlnumpenalty=\count497
-\c@biburlucpenalty=\count498
-\c@biburllcpenalty=\count499
+\c@textcitecount=\count493
+\c@textcitetotal=\count494
+\c@textcitemaxnames=\count495
+\c@biburlbigbreakpenalty=\count496
+\c@biburlbreakpenalty=\count497
+\c@biburlnumpenalty=\count498
+\c@biburlucpenalty=\count499
+\c@biburllcpenalty=\count500
 \biburlbigskip=\muskip20
 \biburlnumskip=\muskip21
 \biburlucskip=\muskip22
 \biburllcskip=\muskip23
-\c@smartand=\count500
+\c@smartand=\count501
 )
 Package biblatex Info: Trying to load bibliography style 'apa'...
 Package biblatex Info: ... file 'apa.bbx' found.
@@ -1561,8 +1568,8 @@ Package biblatex Info: ... file 'standard.bbx' found.
 (C:\Users\nikol\AppData\Local\Programs\MiKTeX\tex/latex/biblatex/bbx\standard.b
 bx
 File: standard.bbx 2026/08/13 v3.22 biblatex bibliography style (PK/MW)
-\c@bbx:relatedcount=\count501
-\c@bbx:relatedtotal=\count502
+\c@bbx:relatedcount=\count502
+\c@bbx:relatedtotal=\count503
 )
 Package biblatex Info: Delimiter 'nameyeardelim' in context 'bib' already defin
 ed, overwriting.
@@ -1616,8 +1623,8 @@ Package biblatex Info: ... and expl3
 .sty
 Package: blx-case-expl3 2026/08/13 v3.22 expl3 case changing code for biblatex
 ))
-\@quotelevel=\count503
-\@quotereset=\count504
+\@quotelevel=\count504
+\@quotereset=\count505
 
 Package fontspec Info: 
 (fontspec)             Font family 'TimesNewRoman(1)' created for font 'Times
@@ -1825,32 +1832,33 @@ Package biblatex Info: Delimiter 'andothersdelim' in context '' already defined
 , overwriting on input line 131.
  [1
 
-] [1
-
-] (rad.toc
+]
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `CambriaMath' (encoding: TU).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 LaTeX Font Info:    Font shape `TU/CambriaMath(2)/m/n' will be
-(Font)              scaled to size 12.00128pt on input line 4.
+(Font)              scaled to size 12.00128pt on input line 215.
 LaTeX Font Info:    Font shape `TU/CambriaMath(2)/m/n' will be
-(Font)              scaled to size 8.76093pt on input line 4.
+(Font)              scaled to size 8.76093pt on input line 215.
 LaTeX Font Info:    Font shape `TU/CambriaMath(2)/m/n' will be
-(Font)              scaled to size 7.20076pt on input line 4.
+(Font)              scaled to size 7.20076pt on input line 215.
 LaTeX Font Info:    Font shape `TU/CambriaMath(3)/m/n' will be
-(Font)              scaled to size 11.99872pt on input line 4.
+(Font)              scaled to size 11.99872pt on input line 215.
 LaTeX Font Info:    Font shape `TU/CambriaMath(3)/m/n' will be
-(Font)              scaled to size 8.75905pt on input line 4.
+(Font)              scaled to size 8.75905pt on input line 215.
 LaTeX Font Info:    Font shape `TU/CambriaMath(3)/m/n' will be
-(Font)              scaled to size 7.19922pt on input line 4.
- [2
+(Font)              scaled to size 7.19922pt on input line 215.
+ [1
 
-] [3] [4])
+] [2] (rad.toc [3
+
+] [4] [5] [6])
 \tf@toc=\write6
 \openout6 = `rad.toc'.
 
- [5] (poglavlja/01-uvod.tex
+ [7]
+(poglavlja/01-uvod.tex
 Глава 1.
 [1
 
@@ -1861,7 +1869,7 @@ LaTeX Font Info:    Font shape `TU/CambriaMath(3)/m/n' will be
 
 ] [6] [7] [8] [9] [10] [11] [12] [13] [14]
 LaTeX Font Info:    Font shape `TU/Consolas(0)/m/n' will be
-(Font)              scaled to size 11.03998pt on input line 438.
+(Font)              scaled to size 11.03998pt on input line 451.
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `Consolas' (encoding: TU).
 (microtype)             For optimal results, create family-specific settings.
@@ -1906,7 +1914,7 @@ Space,Scale=0.92,Script=Cyrillic].
 (fontspec)             <->s*[0.92]"Consolas/BI/OT:script=cyrl;language=dflt;"
 
 LaTeX Font Info:    Font shape `TU/Consolas(1)/m/n' will be
-(Font)              scaled to size 11.03998pt on input line 438.
+(Font)              scaled to size 11.03998pt on input line 451.
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
@@ -1947,9 +1955,9 @@ Space,Scale=0.92,Script=Cyrillic,Language=Serbian].
 (fontspec)             <->s*[0.92]"Consolas/BI/OT:script=cyrl;language=SRB;"
 
 LaTeX Font Info:    Font shape `TU/Consolas(2)/m/n' will be
-(Font)              scaled to size 11.03998pt on input line 438.
+(Font)              scaled to size 11.03998pt on input line 451.
  [15] [16]
-Overfull \hbox (15.43513pt too wide) in paragraph at lines 569--572
+Overfull \hbox (15.43513pt too wide) in paragraph at lines 582--585
 []\TU/TimesNewRoman(1)/m/n/12 Корекција $[]$ оцењује се на клизном прозору рани
 јих ван-- узорачких грешака (одељак []2.5.2[]),
  []
@@ -2308,7 +2316,7 @@ Package fontspec Info:
 (fontspec)             Consolas scale = 0.92.
 
 
-Underfull \hbox (badness 3536) in paragraph at lines 624--624
+Underfull \hbox (badness 3536) in paragraph at lines 637--637
 \TU/TimesNewRoman(1)/m/n/12 стору, повратна трансформација
  []
 
@@ -2353,7 +2361,7 @@ Package fontspec Info:
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
- [19] [20] [21] [22]
+ [19] [20] [21] [22] [23]
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
@@ -2370,7 +2378,6 @@ Package fontspec Info:
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
- [23]
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
@@ -2444,42 +2451,43 @@ Package fontspec Info:
 (fontspec)             Consolas scale = 0.92.
 
  [24] [25] [26]
-Overfull \hbox (2.79243pt too wide) in paragraph at lines 1050--1053
+Overfull \hbox (2.79243pt too wide) in paragraph at lines 1069--1072
 [] []\TU/TimesNewRoman(1)/b/n/12 Неслагање рангирања.[] \TU/TimesNewRoman(1)/m/
 n/12 Различит редослед по QLIKE и по MAE проглашава се ствар-
  []
 
-
-Package fontspec Info: 
-(fontspec)             Consolas scale = 0.92.
-
-
-Package fontspec Info: 
-(fontspec)             Consolas scale = 0.92.
-
 [27]
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+ [28]
 LaTeX Font Info:    Font shape `TU/Consolas(0)/b/n' will be
-(Font)              scaled to size 11.03998pt on input line 1106.
+(Font)              scaled to size 11.03998pt on input line 1141.
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
 LaTeX Font Info:    Font shape `TU/Consolas(1)/b/n' will be
-(Font)              scaled to size 11.03998pt on input line 1106.
+(Font)              scaled to size 11.03998pt on input line 1141.
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
 LaTeX Font Info:    Font shape `TU/Consolas(2)/b/n' will be
-(Font)              scaled to size 11.03998pt on input line 1106.
+(Font)              scaled to size 11.03998pt on input line 1141.
 
-Overfull \hbox (19.4767pt too wide) in paragraph at lines 1105--1109
+Overfull \hbox (19.4767pt too wide) in paragraph at lines 1140--1144
 []\TU/TimesNewRoman(1)/m/n/12 Унапред декларисана породица јесте \TU/TimesNewRo
 man(1)/b/n/12 сваки модел наспрам референтног модела \TU/Consolas(2)/b/n/12 log
 _har\TU/TimesNewRoman(1)/m/n/12 ,
  []
 
-[28]
+[29]
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
@@ -2497,7 +2505,7 @@ Package fontspec Info:
 (fontspec)             Consolas scale = 0.92.
 
 
-Overfull \hbox (35.57703pt too wide) in paragraph at lines 1134--1137
+Overfull \hbox (35.57703pt too wide) in paragraph at lines 1177--1180
 \TU/TimesNewRoman(1)/m/n/12 висе од све три димензије мерења (HAR-- J, CHAR, Li
 ghtGBM, XGBoost, \TU/Consolas(2)/m/n/12 ttm_c\TU/TimesNewRoman(1)/m/n/12 , \TU/
 Consolas(2)/m/n/12 ttm_c_plus_j\TU/TimesNewRoman(1)/m/n/12 ).
@@ -2519,7 +2527,7 @@ Package fontspec Info:
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
-[29] [30]
+[30] [31]
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
@@ -2616,7 +2624,23 @@ Package fontspec Info:
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
- [31] [32] [33] [34] [35]) (poglavlja/03-metodologija.tex [36]
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+ [32] [33] [34] [35] [36]) (poglavlja/03-metodologija.tex [37]
 Глава 3.
 LaTeX Font Info:    Font shape `TU/CambriaMath(2)/m/n' will be
 (Font)              scaled to size 10.00107pt on input line 56.
@@ -2630,9 +2654,9 @@ LaTeX Font Info:    Font shape `TU/CambriaMath(3)/m/n' will be
 (Font)              scaled to size 6.99925pt on input line 56.
 LaTeX Font Info:    Font shape `TU/CambriaMath(3)/m/n' will be
 (Font)              scaled to size 4.99947pt on input line 56.
-[37
+[38
 
-] [38]
+] [39]
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
@@ -2648,21 +2672,283 @@ Overfull \hbox (0.36188pt too wide) in paragraph at lines 95--97
 рви Сент
  []
 
-[39] [40] [41] [42] [43] [44] [45]) (poglavlja/04-rezultati.tex [46]
+[40] [41] [42] [43] [44] [45] [46]
+Overfull \hbox (1.55048pt too wide) in paragraph at lines 419--426
+[]\TU/TimesNewRoman(1)/b/n/12 Упрошћен скуп поверења модела. \TU/TimesNewRoman(
+1)/m/n/12 Поступак елиминације описан у одељку []2.6.2[]
+ []
+
+[47]) (poglavlja/04-rezultati.tex [48]
 Глава 4.
-) (poglavlja/05-zakljucak.tex [47
 
-]
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+[49
+
+] [50] [51]
+Overfull \hbox (23.5501pt too wide) in paragraph at lines 191--213
+ [][] 
+ []
+
+[52] [53] [54] [55]
+LaTeX Font Info:    Font shape `TU/CambriaMath(2)/m/n' will be
+(Font)              scaled to size 10.95116pt on input line 365.
+LaTeX Font Info:    Font shape `TU/CambriaMath(2)/m/n' will be
+(Font)              scaled to size 8.00085pt on input line 365.
+LaTeX Font Info:    Font shape `TU/CambriaMath(2)/m/n' will be
+(Font)              scaled to size 6.00064pt on input line 365.
+LaTeX Font Info:    Font shape `TU/CambriaMath(3)/m/n' will be
+(Font)              scaled to size 10.94882pt on input line 365.
+LaTeX Font Info:    Font shape `TU/CambriaMath(3)/m/n' will be
+(Font)              scaled to size 7.99915pt on input line 365.
+LaTeX Font Info:    Font shape `TU/CambriaMath(3)/m/n' will be
+(Font)              scaled to size 5.99936pt on input line 365.
+LaTeX Font Info:    Font shape `TU/Consolas(0)/m/n' will be
+(Font)              scaled to size 10.07397pt on input line 367.
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+LaTeX Font Info:    Font shape `TU/Consolas(1)/m/n' will be
+(Font)              scaled to size 10.07397pt on input line 367.
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+LaTeX Font Info:    Font shape `TU/Consolas(2)/m/n' will be
+(Font)              scaled to size 10.07397pt on input line 367.
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+ [56]
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+ [57]
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+ [58] [59] [60] [61] [62] [63] [64] [65] [66]
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+)
+(poglavlja/05-zakljucak.tex [67]
 Глава 5.
-) [48
+[68
 
-] [49
+] [69]) [70] [71
 
-] [50] (poglavlja/06-prilog.tex [51]
-
-Package fontspec Info: 
-(fontspec)             Consolas scale = 0.92.
-
+] [72] (poglavlja/06-prilog.tex [73]
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
@@ -2675,26 +2961,31 @@ Package fontspec Info:
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
- [52
 
-] [53]) [54] (rad.aux)
+Package fontspec Info: 
+(fontspec)             Consolas scale = 0.92.
+
+ [74
+
+] [75]) [76]
+(rad.aux)
  ***********
 LaTeX2e <2026-06-01>
 L3 programming layer <2026-08-10>
  ***********
 Package rerunfilecheck Info: File `rad.out' has not changed.
-(rerunfilecheck)             Checksum: 1137573B4FEBE784799B5FCA12F59AB9;18825.
+(rerunfilecheck)             Checksum: 10EA430BC679AE6CF35F992CAF539CF2;24220.
 Package logreq Info: Writing requests to 'rad.run.xml'.
 \openout1 = `rad.run.xml'.
 
  ) 
 Here is how much of TeX's memory you used:
- 40171 strings out of 402560
- 799317 string characters out of 5437924
- 1953938 words of memory out of 5000000
- 68744 multiletter control sequences out of 15000+600000
- 631241 words of font info for 148 fonts, out of 8000000 for 9000
+ 40327 strings out of 402560
+ 802930 string characters out of 5437924
+ 1963743 words of memory out of 5000000
+ 68876 multiletter control sequences out of 15000+600000
+ 632985 words of font info for 171 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  97i,19n,116p,1198b,7043s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on rad.pdf (60 pages).
+Output written on rad.pdf (84 pages).
