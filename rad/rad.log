@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999998 (MiKTeX 26.5) (preloaded format=xelatex 2026.9.19)  22 SEP 2026 18:25
+This is XeTeX, Version 3.141592653-2.6-0.999998 (MiKTeX 26.5) (preloaded format=xelatex 2026.9.19)  22 SEP 2026 19:16
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -2465,21 +2465,21 @@ Package fontspec Info:
 
 [26] [27]
 LaTeX Font Info:    Font shape `TU/Consolas(0)/b/n' will be
-(Font)              scaled to size 11.03998pt on input line 1089.
+(Font)              scaled to size 11.03998pt on input line 1081.
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
 LaTeX Font Info:    Font shape `TU/Consolas(1)/b/n' will be
-(Font)              scaled to size 11.03998pt on input line 1089.
+(Font)              scaled to size 11.03998pt on input line 1081.
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
 LaTeX Font Info:    Font shape `TU/Consolas(2)/b/n' will be
-(Font)              scaled to size 11.03998pt on input line 1089.
+(Font)              scaled to size 11.03998pt on input line 1081.
 
-Overfull \hbox (19.4767pt too wide) in paragraph at lines 1088--1092
+Overfull \hbox (19.4767pt too wide) in paragraph at lines 1080--1084
 []\TU/TimesNewRoman(1)/m/n/12 Унапред декларисана породица јесте \TU/TimesNewRo
 man(1)/b/n/12 сваки модел наспрам референтног модела \TU/Consolas(2)/b/n/12 log
 _har\TU/TimesNewRoman(1)/m/n/12 ,
@@ -2503,7 +2503,7 @@ Package fontspec Info:
 (fontspec)             Consolas scale = 0.92.
 
 
-Overfull \hbox (35.57703pt too wide) in paragraph at lines 1125--1128
+Overfull \hbox (35.57703pt too wide) in paragraph at lines 1117--1120
 \TU/TimesNewRoman(1)/m/n/12 висе од све три димензије мерења (HAR-- J, CHAR, Li
 ghtGBM, XGBoost, \TU/Consolas(2)/m/n/12 ttm_c\TU/TimesNewRoman(1)/m/n/12 , \TU/
 Consolas(2)/m/n/12 ttm_c_plus_j\TU/TimesNewRoman(1)/m/n/12 ).
@@ -2622,7 +2622,6 @@ Package fontspec Info:
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
- [31]
 
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
@@ -2639,7 +2638,7 @@ Package fontspec Info:
 Package fontspec Info: 
 (fontspec)             Consolas scale = 0.92.
 
- [32] [33] [34] [35]) (poglavlja/03-metodologija.tex [36]
+ [31] [32] [33] [34] [35]) (poglavlja/03-metodologija.tex [36]
 Глава 3.
 LaTeX Font Info:    Font shape `TU/CambriaMath(2)/m/n' will be
 (Font)              scaled to size 10.00107pt on input line 56.
@@ -2981,7 +2980,7 @@ Package logreq Info: Writing requests to 'rad.run.xml'.
  ) 
 Here is how much of TeX's memory you used:
  40329 strings out of 402560
- 802961 string characters out of 5437924
+ 802962 string characters out of 5437924
  1963707 words of memory out of 5000000
  68878 multiletter control sequences out of 15000+600000
  632985 words of font info for 171 fonts, out of 8000000 for 9000
