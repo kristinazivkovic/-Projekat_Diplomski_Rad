@@ -73,9 +73,12 @@ def udeli_varijanse() -> Path:
                facecolor=boja, edgecolor="black", linewidth=0.7, hatch=sraf)
     ax.set_xticks(list(x))
     ax.set_xticklabels([f"$h = {h}$" for h in HORIZONTI])
+    ax.set_xlabel("хоризонт предвиђања")
     ax.set_ylabel("парцијални ета-квадрат")
     ax.yaxis.set_major_formatter(zarez)
-    ax.legend(frameon=False, fontsize=8, loc="upper right")
+    # Legenda iznad crtane povrsine, da ni u jednom slucaju ne prekrije stubic.
+    ax.legend(frameon=False, fontsize=8, ncol=3,
+              loc="lower center", bbox_to_anchor=(0.5, 1.0))
     ax.grid(axis="y", linewidth=0.4, color="0.85")
     ax.set_axisbelow(True)
     fig.tight_layout()
@@ -91,8 +94,12 @@ def udeo_skokova() -> Path:
     jc["grid"], jc["est"], jc["jt"] = f[0], f[1], f[2]
     jc = jc[jc["est"] == "bpv"]
     mreze = ["1m", "5m", "15m"]
+    #: oznake na x-osi: obican uspravan tekst, ne mathtext -- u $1m$ se "m"
+    #: crta kao matematicka promenljiva u kurzivu, sto ovde nije promenljiva
+    #: nego jedinica.
+    oznake_mreza = {"1m": "1 мин", "5m": "5 мин", "15m": "15 мин"}
     testovi = [("naive", "наивни", "white", "///"),
-               ("bns", "БНС", "0.8", ""),
+               ("bns", "BNS", "0.8", ""),
                ("lm", "LM", "0.5", "xx"),
                ("lm_fdr", "LM-FDR", "0.25", "..")]
 
@@ -105,11 +112,15 @@ def udeo_skokova() -> Path:
         ax.bar([xi + (i - 1.5) * w for xi in x], vals, w, label=ime,
                facecolor=boja, edgecolor="black", linewidth=0.7, hatch=sraf)
     ax.set_xticks(list(x))
-    ax.set_xticklabels([f"${g}$" for g in mreze])
+    ax.set_xticklabels([oznake_mreza[g] for g in mreze])
+    ax.set_xlabel("учесталост узорковања")
     ax.set_ylabel("удео дана са скоком")
     ax.yaxis.set_major_formatter(zarez2)
     ax.set_ylim(0, 0.85)
-    ax.legend(frameon=False, fontsize=8, ncol=4, loc="upper center")
+    # Legenda iznad crtane povrsine: ranije je „upper center“ presecala
+    # najvisi stubic (LM-FDR na 1 мин).
+    ax.legend(frameon=False, fontsize=8, ncol=4,
+              loc="lower center", bbox_to_anchor=(0.5, 1.0))
     ax.grid(axis="y", linewidth=0.4, color="0.85")
     ax.set_axisbelow(True)
     fig.tight_layout()

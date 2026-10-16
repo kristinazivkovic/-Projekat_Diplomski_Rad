@@ -41,6 +41,20 @@
 % ублажава превише агресивно растезање речи.
 \usepackage{microtype}
 
+% Латиничне речи не смеју да се преламају (види rad.tex), па TeX у понеком
+% реду нема ниједно место прелома. \emergencystretch му дозвољава да такав
+% ред мало растегне уместо да га пусти преко десне маргине.
+\setlength{\emergencystretch}{1em}
+
+% Српски обрасци преламања примењују се и на латиничне речи, а не умеју да
+% их преломе на правом месту (discove-ry, le-ast, AR-FIMA, XG-Boost). У
+% ћириличном тексту је свака латинична реч страна, па се преламање свих
+% таквих речи забрањује — реч наведена у \hyphenation без иједне цртице
+% нема ниједно дозвољено место прелома. Списак је извучен из тела рада.
+% Списак стоји у rad.tex одмах иза \begin{document}, а не овде: polyglossia
+% активира српски тек по уласку у документ, па изузетак уписан у преамбули
+% (па и кроз \AtBeginDocument) припадне другом језику и остане без дејства.
+
 % ── уједначавање вертикалних размака ────────────────────────
 % Пошто је \parskip постављен на 12pt, LaTeX-ови подразумевани
 % размаци око набрајања, формула и наслова СЕ ДОДАЈУ на њега и
@@ -83,6 +97,8 @@
 % ── табеле ──────────────────────────────────────────────────
 \usepackage{booktabs}
 \usepackage{multirow}
+\usepackage{needspace}   % држи пасус и његову једначину на истој страни
+\usepackage{xurl}        % дозвољава прелом дугих идентификатора у \url
 \usepackage{tabularx}
 \usepackage{longtable}
 \usepackage{array}
@@ -127,6 +143,26 @@
 \let\originalchapter\chapter
 
 % ── референце и хипервезе ───────────────────────────────────
+% ── размаци у садржају ──────────────────────────────────────
+% Опција [titles] оставља обликовање наслова класи, а даје контролу само
+% над вертикалним размацима између ставки садржаја. Без ње би tocloft
+% преузео и изглед наслова поглавља, што би поништило подешавања titlesec-а.
+\usepackage[titles]{tocloft}
+\setlength{\cftbeforechapskip}{6pt}      % мали додатни размак пред поглављима
+\setlength{\cftbeforesecskip}{4pt}       % између ставки нивоа x.y
+\setlength{\cftbeforesubsecskip}{0pt}    % између ставки нивоа x.y.z
+\setlength{\cftbeforesubsubsecskip}{0pt}
+
+% ── размаци око истакнутих формула ──────────────────────────
+% Изједначени размак изнад и испод приказа, мањи од подразумеваног.
+% Иде кроз \AtBeginDocument јер setspace при \onehalfspacing поставља
+% ове дужине на почетку документа, па би ранија вредност била прегажена.
+\AtBeginDocument{%
+  \setlength{\abovedisplayskip}{6pt plus 2pt minus 2pt}%
+  \setlength{\belowdisplayskip}{6pt plus 2pt minus 2pt}%
+  \setlength{\abovedisplayshortskip}{3pt plus 1pt}%
+  \setlength{\belowdisplayshortskip}{3pt plus 1pt}}
+
 \usepackage[hidelinks]{hyperref}
 \usepackage{caption}
 
