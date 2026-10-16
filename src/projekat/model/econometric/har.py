@@ -1,17 +1,15 @@
-"""HAR (Corsi 2009), fit by NNLS directly on LEVELS -- one of three
+"""HAR (Corsi 2009), fit by NNLS directly on LEVELS -- one of the
 deliberately distinct positivity mechanisms in this codebase (the others:
-log+correction in log_har.py/char.py/etc., and the structural
-multiplicative form in mem.py). Never unify these.
+log+correction in log_har.py/char.py/etc., the structural multiplicative
+form in mem.py, and zero-clipping plus one combined correction in
+ttm_c_plus_j.py). Never unify these.
 
-Non-negative least squares on y_{t,h} ~ RV_d + RV_w + RV_m (levels, no
-intercept dropped -- NNLS here includes a non-negative intercept as a
-constant regressor) guarantees a non-negative forecast by construction,
-since every fitted coefficient is >= 0 and every regressor (RV_d/w/m) is
-already non-negative: no forecast can go negative, so there is no need for
-either a log transform or a back-transform correction. This is the
-structural counterpart to log_har.py's log-space fit -- same HAR feature
-set, different fitting/positivity mechanism, deliberately kept as a
-SEPARATE model rather than folded into log_har.py, so the thesis can
+Non-negative least squares on y_{t,h} ~ const + RV_d + RV_w + RV_m (levels,
+the non-negative intercept enters as a constant regressor) guarantees a
+non-negative forecast by construction, since every fitted coefficient is
+>= 0 and every regressor (RV_d/w/m) is already non-negative -- so there is
+no log transform and no back-transform correction (correction = "none").
+Deliberately kept as a SEPARATE model from log_har.py, so the thesis can
 compare whether the positivity mechanism itself (not just the feature set)
 affects forecast accuracy.
 
@@ -25,52 +23,50 @@ import pandas as pd
 from scipy.optimize import nnls
 
 from projekat.model.registry import register_model
-from projekat.model.targets import LEVEL_TARGET_COL
+from projekat.model.targets import target_columns
+
+_COLUMNS = ("RV_d", "RV_w", "RV_m")
 
 
-def _har_level_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Same HAR feature set as log_har.py's har_features, but in LEVELS
-    (no log) -- NNLS needs non-negative regressors to guarantee a
-    non-negative fitted value, and RV_d/w/m are already non-negative by
-    construction (they're variances)."""
-    out = pd.DataFrame(index=df.index)
-    out["const"] = 1.0
-    out["RV_d_lag1"] = df["RV_d"]
-    out["RV_w_lag1"] = df["RV_w"]
-    out["RV_m_lag1"] = df["RV_m"]
-    return out
+def _level_design(df: pd.DataFrame) -> np.ndarray:
+    return np.column_stack([np.ones(len(df))] + [df[c].to_numpy(dtype=float) for c in _COLUMNS])
 
 
 class _FittedHARLevels:
-    def __init__(self, coef: np.ndarray, feature_cols: list[str]):
-        self._coef = coef
-        self._feature_cols = feature_cols
-        # NNLS coefficients are non-negative and every regressor is
-        # non-negative, so the fitted value can never be negative --
-        # structural positivity, no correction needed.
-        self.backtransform_correction = 0.0
+    def __init__(self, coefs: dict[int, np.ndarray | None]):
+        self._coefs = coefs
 
-    def predict(self, X: pd.DataFrame) -> np.ndarray:
-        return (X[self._feature_cols].to_numpy() @ self._coef)
+    def predict(self, history: pd.DataFrame, origin_idx: np.ndarray, horizons) -> dict[int, np.ndarray]:
+        X = _level_design(history.iloc[origin_idx])
+        valid = np.isfinite(X).all(axis=1)
+        out = {}
+        for h in horizons:
+            pred = np.full(len(X), np.nan)
+            coef = self._coefs.get(h)
+            if coef is not None:
+                pred[valid] = X[valid] @ coef
+            out[h] = pred
+        return out
 
 
 class _HARLevels:
     name = "har"
     stochastic = False
-    is_sequence_model = False
     predicts_levels = True
+    refit = "every_21"
+    correction = "none"
     depends_on = frozenset({"grid"})
 
-    def fit(self, fit_train: pd.DataFrame, val_fold: pd.DataFrame, horizon: int, *, seed: int | None = None) -> _FittedHARLevels:
-        X_train = _har_level_features(fit_train)
-        y_train = fit_train[LEVEL_TARGET_COL]
-        valid = X_train.notna().all(axis=1) & y_train.notna()
-
-        coef, _residual_norm = nnls(X_train.loc[valid].to_numpy(), y_train.loc[valid].to_numpy())
-        return _FittedHARLevels(coef, list(X_train.columns))
-
-    def features(self, df: pd.DataFrame) -> pd.DataFrame:
-        return _har_level_features(df)
+    def fit(self, train: pd.DataFrame, horizons, *, seed: int | None = None) -> _FittedHARLevels:
+        X = _level_design(train)
+        finite_x = np.isfinite(X).all(axis=1)
+        coefs = {}
+        for h in horizons:
+            _, level_col, _ = target_columns(h)
+            y = train[level_col].to_numpy(dtype=float)
+            valid = finite_x & np.isfinite(y)
+            coefs[h] = nnls(X[valid], y[valid])[0] if valid.sum() > X.shape[1] else None
+        return _FittedHARLevels(coefs)
 
 
 har = _HARLevels()

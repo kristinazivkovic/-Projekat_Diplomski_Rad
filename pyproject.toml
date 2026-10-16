@@ -37,3 +37,13 @@ dev = [
 [build-system]
 requires = ["uv_build>=0.12.11,<0.13.0"]
 build-backend = "uv_build"
+
+# CUDA build of torch (RTX 4070) for PatchTST. The default PyPI wheel on
+# Windows is CPU-only. `explicit = true` keeps every OTHER package on PyPI.
+[tool.uv.sources]
+torch = { index = "pytorch-cu128" }
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true

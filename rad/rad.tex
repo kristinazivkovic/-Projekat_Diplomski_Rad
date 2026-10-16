@@ -25,8 +25,13 @@
 % Решење: српски се мапира на енглеску APA датотеку, а недостајући
 % макрои се дефинишу преузимањем из `english-apa.lbx`.
 \DeclareLanguageMapping{serbian}{english-apa}
+\DeclareLanguageMapping{serbianc}{english-apa}
 \DeclareLanguageMapping{english}{english-apa}
 \addbibresource{literatura.bib}
+
+% Списак литературе се слаже без обостраног поравнања: при поравнању LaTeX
+% растеже размаке да попуни ред, што дуге DOI адресе разбија на „https : / /“.
+\AtBeginBibliography{\raggedright}
 
 % Компатибилносни слој: APA датумски макрои које српска датотека нема.
 \makeatletter
@@ -47,19 +52,77 @@
 %   два аутора      → (Влајић и Лечић-Цветковић, 2021)
 %   више од два     → (Јовић и др, 2021)
 % Стрингови се дефинишу за ENGLISH, јер је то језик библиографије.
+\NewBibliographyString{jourarticle}
 \DefineBibliographyStrings{english}{%
-  andothers = {и др},
+  andothers = {и~др\adddot},
   and       = {и},
+  in        = {In},
+  page      = {p\adddot},
+  pages     = {pp\adddot},
+  % APA испис броја чланка („Article 14“) — српска локализација нема овај низ
+  jourarticle = {Article},
+}
+% Исти низови морају бити дефинисани и за српски, јер biblatex бира низове
+% према активном језику документа (serbianc), а не према језику библиографије.
+\DefineBibliographyStrings{serbian}{%
+  andothers = {и~др\adddot},
+  and       = {и},
+  in        = {In},
+  jourarticle = {Article},
+}
+\DefineBibliographyStrings{serbianc}{%
+  andothers = {и~др\adddot},
+  and       = {и},
+  in        = {In},
+  jourarticle = {Article},
 }
 % APA стил користи амперсанд (&) и у заградним цитатима и у списку
 % литературе; шаблон ФОН-а тражи српско „и“, па се замењује свуда.
-\renewcommand*{\finalnamedelim}{\addspace\bibstring{and}\addspace}
-% APA користи засебан делимитер унутар заграда (\finalnamedelim*),
-% који мора бити преиначен посебно, иначе амперсанд остаје.
+% Новији biblatex делимитере поставља преко \DeclareDelimFormat, па их
+% \renewcommand више не мења: APA контекст би вратио амперсанд.
+% Декларације иду кроз \AtBeginDocument јер biblatex сам стил (apa.bbx, apa.cbx)
+% учитава тек на крају преамбуле, па би ранија дефиниција била прегажена.
+% APA пред последњим аутором ставља зарез („A, B, & C“); уз српско „и“ зарез се
+% изоставља, па се Оксфордски зарез гаси.
 \AtBeginDocument{%
-  \renewcommand*{\finalnamedelim}{\addspace\bibstring{and}\addspace}%
-  \csdef{finalnamedelim*}{\addspace\bibstring{and}\addspace}%
+  \DeclareDelimFormat{finalnamedelim}{\addspace\bibstring{and}\addspace}%
+  \DeclareDelimFormat[parencite,citation]{finalnamedelim}{%
+    \addspace\bibstring{and}\addspace}%
+  \DeclareDelimFormat[bib,biblist]{finalnamedelim}{%
+    \addspace\bibstring{and}\addspace}%
+  \DeclareDelimFormat[textcite]{finalnamedelim}{%
+    \addspace\bibstring{and}\addspace}%
+  \DeclareDelimFormat{andothersdelim}{\addspace}%
+  \renewcommand*{\finalandcomma}{}%
 }
+% Српски везник „и“ не тражи зарез испред себе, док APA пред „&“ ставља зарез.
+% Датотека језика (english-apa.lbx) враћа \finalandcomma при свакој промени
+% језика, па се гаси непосредно пре исписа цитата и списка литературе.
+% Зарез се враћа при свакој промени језика (свака одредница у списку литератури
+% носи језик), па се гаси у самим језичким додацима, а не једном у преамбули.
+\DefineBibliographyExtras{english}{\renewcommand*{\finalandcomma}{}}
+\DefineBibliographyExtras{serbian}{\renewcommand*{\finalandcomma}{}}
+\DefineBibliographyExtras{serbianc}{\renewcommand*{\finalandcomma}{}}
+
+% Зарез пред последњим аутором у списку литературе НЕ долази од делимитера него од
+% самог формата имена: APA после сваког неконачног обрнутог имена („Презиме, И.“)
+% додаје зарез (apa.bbx, \apablx@ifrevnameappcomma), па се уз српско „и“ добија
+% „Барндорф-Нилсен, О. Е., и Шепард, Н.“. Зато се услов помера једно име раније:
+% зарез се изоставља и на претпоследњем имену, дакле непосредно пред „и“, док
+% зарези између осталих имена остају. Цитати се не мењају, јер у њима имена нису
+% обрнута, па се овај зарез тамо и не додаје.
+\makeatletter
+\AtBeginDocument{%
+  \renewcommand*{\apablx@ifrevnameappcomma}{%
+    \iftoggle{apablx@wantcomma}
+      {\ifboolexpr{
+         test {\ifnumless{\value{listcount}}{\the\numexpr\value{liststop}-1\relax}}
+         or
+         test \ifmorenames
+       }}
+      {\@secondoftwo}}%
+}
+\makeatother
 
 \title{Дизајн мерења наспрам избора модела у предвиђању реализоване волатилности}
 \author{Кристина Живковић}
@@ -67,48 +130,24 @@
 
 \begin{document}
 
-% ── насловна страна (по шаблону ФОН-а) ──────────────────────
-\begin{titlepage}
-\centering
-\vspace*{1.5cm}
+% Забрана преламања латиничних речи (образложење у preambula.tex).
+\hyphenation{%
+    Ben-ja-mi-ni Bol-ler-slev An-der-sen
+    ab-so-lute analysis ANOVA ARFIMA auto-cor-re-la-tion auto-re-gres-sive
+    av-er-age bi-power calendars chapter ciscenje con-di-tional con-sis-tent
+    dis-cov-ery distance dy-nam-ic effect error exchange false foundation
+    frac-tion-al-ly GARCH gen-er-al-ized het-ero-ge-neous
+    het-ero-skedas-tic-i-ty hybrid in-te-grat-ed izvor learn least leverage
+    LightGBM like-li-hood me-di-an MedRV Mixer model modeli models moving
+    mul-ti-plica-tive naive neg-a-tive NumPy pandas panel pro-ce-dure proxy
+    PyArrow Python PyTorch QLIKE quan-tile quar-tic-i-ty quasi re-al-ized regime
+    relQLIKE scikit SciPy squared squares statsmodels symbol thresh-old
+    TinyTimeMixer transformers TrBPV tri-power value vari-ance vari-a-tion
+    XGBoost
+}
 
-{\bfseries УНИВЕРЗИТЕТ У БЕОГРАДУ\par}
-\vspace{0.4em}
-{\bfseries ФАКУЛТЕТ ОРГАНИЗАЦИОНИХ НАУКА\par}
-
-\vspace{5cm}
-
-{\bfseries ЗАВРШНИ РАД\par}
-
-\vspace{1cm}
-
-{\fontsize{18}{22}\selectfont\bfseries
-Утицај дизајна мерења и избора модела\\[0.3em]
-на тачност предвиђања реализоване\\[0.3em]
-волатилности\par}
-
-\vspace{4cm}
-
-\begin{minipage}[t]{0.48\textwidth}
-\raggedright
-{\bfseries Ментор}\\[0.8em]
-{\bfseries Др Александар Ракићевић,}\\
-{\bfseries Доцент}
-\end{minipage}
-\hfill
-\begin{minipage}[t]{0.48\textwidth}
-\raggedright
-{\bfseries Студент}\\[0.8em]
-{\bfseries Кристина Живковић}\\
-{\bfseries 2020/0029}
-\end{minipage}
-
-\vfill
-
-{\bfseries Београд, 2026. годинe\par}
-\end{titlepage}
-
-% Насловна страна, апстракт и садржај се не нумеришу; нумерација
+% Насловна страна је уклоњена на захтев; рад почиње апстрактом.
+% Апстракт и садржај се не нумеришу; нумерација
 % почиње од прве стране увода (захтев шаблона).
 \pagenumbering{gobble}
 
@@ -116,39 +155,40 @@
 \chapter*{АПСТРАКТ}
 \addcontentsline{toc}{chapter}{Апстракт}
 
-Реализована волатилност представља једну од централних величина савременог управљања
-финансијским ризиком, будући да се на њој заснивају мере попут вредности при ризику и
-вредновање опција. За разлику од приноса, чија је предвидљивост емпиријски занемарљива,
-интензитет кретања цена показује изражену перзистентност и стога представља проблем у
-коме стваран сигнал постоји. Актуелна литература о предвиђању реализоване волатилности
-превасходно се бави поређењем модела, од HAR породице, преко стабала одлучивања, до
-трансформерских архитектура, при чему саме реализоване мере третира као фиксне и унапред
-дате улазе, иако је реализована волатилност изведена, а не посматрана величина, чија
-свака вредност произлази из низа методолошких одлука.
+Реализована волатилност једна је од централних величина савременог управљања
+финансијским ризиком, јер се на њој заснивају мере попут вредности под ризиком. Она је,
+међутим, изведена а не посматрана величина, чија свака вредност произлази из
+методолошких одлука о фреквенцији узорковања, естиматору отпорном на скокове и тесту за
+детекцију скокова. Те одлуке у раду се заједно називају дизајном мерења волатилности.
+Циљ рада је да утврди да ли разлике у тачности прогнозе више зависе од избора модела
+или од начина на који је волатилност измерена.
 
-Циљ рада јесте да утврди који удео разлика у тачности предвиђања потиче од избора модела,
-а који од одлука донетих при мерењу улазних величина.
+У ту сврху спроведен је факторски експеримент у коме се 16 модела укршта са
+36 дизајна мерења. Модели обухватају HAR породицу модела и њена проширења,
+моделе засноване на стаблима одлучивања и претходно обучене моделе опште намене, а
+евалуација је спроведена на панелу од 28 акција у периоду 2015–2025. Тачност
+је оцењена QLIKE функцијом губитка, уз Диболд–Маријанов тест и тестове вредности под
+ризиком. Декомпозицијом варијансе потом је утврђено колики део разлика у тачности
+потиче од модела, а колики од мерења.
 
-У раду је спроведен факторски експеримент у коме се дизајн мерења варира кроз три
-димензије, фреквенцију узорковања, естиматор отпоран на скокове и тест за детекцију
-скокова, и укршта са скупом економетријских модела, модела машинског учења и темељних
-модела временских серија. Евалуација је спроведена кроз усидрену унапредну валидацију,
-помоћу QLIKE функције губитка, Дибоулд-Маријановог теста, скупа поверења модела и тестова
-вредности при ризику, док се удели објашњене варијансе губитка приписују појединачним
-факторима помоћу декомпозиције варијансе са блокирањем по симболу и кластер-робусним
-стандардним грешкама.
-
-Закључак рада указује на то да дизајн мерења представља експерименталну димензију
-равноправну избору архитектуре, те да део објављених разлика међу моделима може потицати
-од начина припреме података, а не од самих модела.
+Резултати показују да на једнодневном хоризонту начин мерења има утицај сличне величине
+као избор модела и да тај утицај готово у потпуности долази од учесталости бележења
+цена, док избор естиматора и теста за скокове мало мења резултат. Информација о
+скоковима тек незнатно побољшава прогнозу, а поредак модела знатно се мења када се они
+процењују према економском критеријуму. Зато начин мерења волатилности треба јасно
+навести и образложити у сваком истраживању, једнако као избор модела.
 
 \vspace{1em}
 \noindent\textbf{Кључне речи:} реализована волатилност, дизајн мерења, HAR модел,
-детекција скокова, декомпозиција варијансе, вредност при ризику.
+детекција скокова, декомпозиција варијансе, вредност под ризиком.
 
 % ── садржај ─────────────────────────────────────────────────
+% Документ користи глобални проред 1,5 (setspace), који би садржај непотребно
+% растегао, па се он слаже једноструким прородом.
 \renewcommand{\contentsname}{САДРЖАЈ}
+\begin{singlespace}
 \tableofcontents
+\end{singlespace}
 
 % ── поглавља ────────────────────────────────────────────────
 % Нумерација страница почиње од прве стране увода (шаблон ФОН-а).
@@ -159,8 +199,13 @@
 \input{poglavlja/01-uvod}
 \input{poglavlja/02-teorijske-osnove}
 \input{poglavlja/03-metodologija}
+\input{poglavlja/04-rezultati}
+\input{poglavlja/05-zakljucak}
 
 % ── литература (поглавље се НЕ нумерише, по шаблону) ────────
 \printbibliography[heading=bibintoc,title={ЛИТЕРАТУРА}]
+
+% ── прилози ─────────────────────────────────────────────────
+\input{poglavlja/06-prilog}
 
 \end{document}

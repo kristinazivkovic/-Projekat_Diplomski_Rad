@@ -1,86 +1,176 @@
-"""Zajednička korekcija pristrasnosti na log-skali. Modeli predviđaju
-log(y_{t,h}); naivna exp() transformacija unazad sistematski potcenjuje
-nivo (Jensenova nejednakost), pa svaki model koristi ovu jedinu
-implementaciju umesto da rizikuje razmimoilaženje formula po modelu.
+"""Zajednička korekcija povratne transformacije i Mincer-Zarnowitz
+rekalibracija -- JEDINO mesto u kodu gde se one računaju.
 
-Korekcija je NEPARAMETARSKA: a = ln(mean(exp(rezidual))), NE Gaussova
-sigma^2/2. Gaussova formula pretpostavlja da su reziduali log(y_true) -
-log(y_hat) tačno normalno raspodeljeni; ako raspodela ima debele repove ili
-je asimetrična (očekivano za RV reziduale), sigma^2/2 sistematski
-pogrešno oceni pravu korekciju E[exp(rezidual)]. Neparametarska ocena
-umesto toga direktno ocenjuje taj očekivani exp(rezidual) iz uzorka, bez
-pretpostavke o obliku raspodele.
+KOREKCIJA IZ SOPSTVENIH VAN-UZORAČKIH GREŠAKA, STROGO PRE t
+===========================================================
+Nema posebnog validacionog preklopa. Za prognozu napravljenu na dan t,
+korekcija se ocenjuje iz van-uzoračkih grešaka ISTOG modela (iste serije
+model x dizajn x horizont x seme, objedinjeno preko simbola) čiji je cilj
+REALIZOVAN u poslednjih W = config.CORRECTION_WINDOW_SESSIONS dana
+trgovanja strogo pre t:
 
-`a` MORA doći iz rezidualâ VAN skupa za treniranje (out-of-fold) na
-validacionom skupu (poslednja godina treniranja,
-windows.split_with_validation), nikad iz reziduala unutar uzorka
-(in-sample) -- rezidualni podaci modela zasnovanih na stablima unutar
-uzorka su blizu nule, što bi tiho nedovoljno korigovalo prognoze modela sa
-stablima u odnosu na OLS modele.
+    greška prognoze sa porekla s ulazi u korekciju za dan t
+    akko   t - W <= r(s) <= t - 1,
 
-KOMBINOVANE (SUM-OF-COMPONENTS) PROGNOZE -- zaseban slučaj, obavezan:
-residual_correction() ocenjuje korekciju koja čini y_hat = exp(log_y_hat +
-a) QLIKE-optimalnim ZA SERIJU NA KOJOJ JE OCENJENA. Ako model predviđa
-zbir komponenti (npr. C_hat + J_hat, gde je svaka komponenta možda
-uklopljena/transformisana odvojeno -- vidi model/foundation/ttm_c_plus_j.py
-kada bude implementiran), primena zasebne korekcije po komponenti i
-sabiranje POSLE korekcije ostavlja ZBIR bez ikakve kontrolisane korekcije:
-ne postoji garancija da zbir dve odvojeno-QLIKE-optimalne korekcije daje
-QLIKE-optimalnu korekciju za njihov zbir (Jensenova nejednakost se ne
-sabira linearno preko komponenti). combined_forecast_correction() ispod
-je namerno odvojena funkcija koja ocenjuje TAČNO JEDNU multiplikativnu
-korekciju na već sabranu (levels-prostor) prognozu naspram ukupnog cilja,
-tako da nijedan model ne može lokalno "sam smisliti" korekciju po
-komponenti umesto da prođe kroz ovaj deljeni API."""
+gde je r(s) indeks dana trgovanja na koji je cilj y_{s,h} realizovan
+(targets.py, target_end). Za h = 22 to znači da greška prognoze sa dana s
+postaje dostupna tek 22 dana posle s -- nikad ranije. Pre prve realizovane
+greške (početak 2014, godine zagrevanja) korekcija je neutralna (a = 0,
+m* = 1); ti dani se ne ocenjuju.
+
+Tri vrste korekcije (Model.correction):
+
+  "log"            y_hat = exp(p + a),  a = ln(mean(exp(e))),  e = ln y - p.
+                   NEPARAMETARSKA (Duan 1983), ne Gaussova sigma^2/2: RV
+                   reziduali nisu normalni, posebno kod stabala.
+  "ratio_of_sums"  y_hat = m* * y_raw,  m* = sum(y) / sum(y_raw).
+                   Za KOMBINOVANE prognoze (ttm_c_plus_j: C + J u nivoima;
+                   log_har_ttm: kombinacija u log prostoru): JEDNA korekcija
+                   na već kombinovanoj prognozi, nikad po komponenti --
+                   Jensenova nejednakost nije aditivna preko komponenti.
+                   Odnos zbirova, a ne prosek odnosa: prosek odnosa y/y_raw
+                   eksplodira kad je y_raw blizu nule (ttm_c_plus_j seče J na
+                   nuli), pa jedan dan preuzme ceo faktor.
+  "none"           y_hat = p (nivoi; NNLS HAR i MEM -- pozitivnost je
+                   strukturna).
+
+MINCER-ZARNOWITZ po istom pravilu: y = alpha + beta * y_hat, OLS nad
+parovima (y, y_hat) čiji je cilj realizovan u istom kliznom prozoru;
+y_hat_recalibrated = alpha + beta * y_hat. Sekundarna figura, uvek pored
+sirove, nikad umesto nje.
+"""
 
 from __future__ import annotations
 
 import numpy as np
 
+from projekat.config import CORRECTION_WINDOW_SESSIONS, MZ_MIN_PAIRS
 
-def backtransform(log_y_hat: np.ndarray, correction: float) -> np.ndarray:
-    """y_hat = exp(log_y_hat + a), gde je `a` neparametarska korekcija iz
-    residual_correction() (NE 0.5*sigma^2)."""
-    return np.exp(log_y_hat + correction)
+
+def backtransform(log_y_hat: np.ndarray, correction) -> np.ndarray:
+    """y_hat = exp(log_y_hat + a), gde je `a` neparametarska korekcija."""
+    return np.exp(np.asarray(log_y_hat) + correction)
 
 
 def residual_correction(y_true_log: np.ndarray, y_pred_log: np.ndarray) -> float:
-    """a = ln(mean(exp(rezidual))) za neparametarsku Jensenovu korekciju.
-    Ovo pozivati ISKLJUČIVO na predikcijama van skupa za treniranje
-    (validacioni skup) -- vidi docstring modula. Ime zadržano konceptualno
-    blisko staroj residual_variance() (sada uklonjenoj) da pozivaoci znaju
-    da je ovo njena zamena, ne dodatna veličina.
-
-    NE koristiti ovo po komponenti za model koji predviđa zbir komponenti
-    (C_hat + J_hat i sl.) -- vidi combined_forecast_correction() i docstring
-    modula."""
-    resid = y_true_log - y_pred_log
+    """a = ln(mean(exp(rezidual))) nad jednim skupom reziduala."""
+    resid = np.asarray(y_true_log) - np.asarray(y_pred_log)
     return float(np.log(np.mean(np.exp(resid))))
 
 
 def combined_forecast_correction(y_true_level: np.ndarray, combined_y_hat_level: np.ndarray) -> float:
-    """Multiplikativni faktor `m` za korekciju VEĆ SABRANE (levels-prostor)
-    prognoze zbira komponenti, ocenjen na van-uzorka (validacionom) skupu:
-    korigovana_prognoza = m * combined_y_hat_level, gde je
-    m = mean(y_true_level / combined_y_hat_level) na validacionom skupu --
-    neparametarski analogon exp(residual_correction(...)) primenjen
-    direktno u levels-prostoru na već sabranu prognozu, umesto na log
-    rezidual jedne komponente.
-
-    OBAVEZNO za svaki model čija je prognoza zbir komponenti fitovanih
-    (potencijalno) odvojeno -- primena residual_correction() po komponenti
-    pre sabiranja ostavlja zbir bez ikakve kontrolisane korekcije (vidi
-    docstring modula). Pozvati TAČNO JEDNOM po modelu, na kombinovanoj
-    prognozi, nikad po komponenti."""
-    valid = combined_y_hat_level > 0
-    if not np.any(valid):
+    """m* = sum(y) / sum(y_raw) za već kombinovanu prognozu u nivoima --
+    ODNOS ZBIROVA, ne prosek odnosa (vidi docstring modula)."""
+    y = np.asarray(y_true_level, dtype=float)
+    f = np.asarray(combined_y_hat_level, dtype=float)
+    ok = np.isfinite(y) & np.isfinite(f)
+    total = f[ok].sum()
+    if not ok.any() or total <= 0:
         return 1.0
-    ratio = y_true_level[valid] / combined_y_hat_level[valid]
-    return float(np.mean(ratio))
+    return float(y[ok].sum() / total)
 
 
-def apply_combined_correction(combined_y_hat_level: np.ndarray, correction: float) -> np.ndarray:
-    """Primeni multiplikativnu korekciju iz combined_forecast_correction()
-    na kombinovanu (levels-prostor) prognozu: korigovana = m *
-    combined_y_hat_level."""
-    return correction * combined_y_hat_level
+def apply_combined_correction(combined_y_hat_level: np.ndarray, correction) -> np.ndarray:
+    return correction * np.asarray(combined_y_hat_level)
+
+
+# ── klizne sume po danu realizacije ──────────────────────────────────────
+
+
+def _trailing_sums(
+    origin_idx: np.ndarray,
+    realized_idx: np.ndarray,
+    weights: list[np.ndarray],
+    *,
+    window: int,
+) -> list[np.ndarray]:
+    """Za svaki red (poreklo o): suma težina preko redova čiji je indeks
+    realizacije r u [o - window, o - 1]. Redovi bez realizacije
+    (realized_idx < 0) ili sa nekonačnom težinom ne ulaze."""
+    origin_idx = np.asarray(origin_idx, dtype=np.int64)
+    realized_idx = np.asarray(realized_idx, dtype=np.int64)
+    ok = realized_idx >= 0
+    for w in weights:
+        ok &= np.isfinite(w)
+    size = int(max(origin_idx.max(initial=0), realized_idx.max(initial=0))) + 2
+    hi = origin_idx                                   # c[o] = suma za r <= o - 1
+    lo = np.clip(origin_idx - window, 0, None)        # c[o - W] = suma za r <= o - W - 1
+    out = []
+    for w in weights:
+        agg = np.bincount(realized_idx[ok], weights=w[ok], minlength=size)
+        c = np.concatenate([[0.0], np.cumsum(agg)])
+        out.append(c[hi] - c[lo])
+    return out
+
+
+def trailing_corrections(
+    origin_idx: np.ndarray,
+    realized_idx: np.ndarray,
+    raw_pred: np.ndarray,
+    y_true: np.ndarray,
+    *,
+    kind: str,
+    predicts_levels: bool,
+    window: int = CORRECTION_WINDOW_SESSIONS,
+) -> dict[str, np.ndarray]:
+    """Korekcija za svaki red iz van-uzoračkih grešaka realizovanih u
+    [o - window, o - 1] (vidi docstring modula).
+
+    Vraća: log_y_hat (sirova log prognoza ili NaN), raw_y_hat (nivoi pre
+    korekcije), backtransform_correction (a, samo za "log"),
+    combined_correction (m*, samo za "ratio_of_sums"), y_hat."""
+    raw_pred = np.asarray(raw_pred, dtype=float)
+    y_true = np.asarray(y_true, dtype=float)
+    n = len(raw_pred)
+    nan = np.full(n, np.nan)
+    log_y_hat = nan.copy() if predicts_levels else raw_pred
+    raw_level = raw_pred if predicts_levels else np.exp(raw_pred)
+
+    if kind == "none":
+        if not predicts_levels:
+            raise ValueError("correction='none' važi samo za modele koji predviđaju nivoe")
+        return {"log_y_hat": log_y_hat, "raw_y_hat": raw_level, "backtransform_correction": nan,
+                "combined_correction": nan.copy(), "y_hat": raw_level}
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        if kind == "log":
+            if predicts_levels:
+                raise ValueError("correction='log' zahteva log prognozu (predicts_levels=False)")
+            w = np.exp(np.log(y_true) - raw_pred)
+            s, cnt = _trailing_sums(origin_idx, realized_idx, [w, np.ones(n)], window=window)
+            a = np.where(cnt > 0, np.log(s / np.where(cnt > 0, cnt, 1.0)), 0.0)
+            return {"log_y_hat": log_y_hat, "raw_y_hat": raw_level, "backtransform_correction": a,
+                    "combined_correction": nan, "y_hat": np.exp(raw_pred + a)}
+
+        if kind == "ratio_of_sums":
+            s_y, s_f = _trailing_sums(origin_idx, realized_idx, [y_true, raw_level], window=window)
+            m = np.where(s_f > 0, s_y / np.where(s_f > 0, s_f, 1.0), 1.0)
+            return {"log_y_hat": log_y_hat, "raw_y_hat": raw_level, "backtransform_correction": nan,
+                    "combined_correction": m, "y_hat": m * raw_level}
+
+    raise ValueError(f"nepoznata vrsta korekcije {kind!r}")
+
+
+def trailing_mincer_zarnowitz(
+    origin_idx: np.ndarray,
+    realized_idx: np.ndarray,
+    y_hat: np.ndarray,
+    y_true: np.ndarray,
+    *,
+    window: int = CORRECTION_WINDOW_SESSIONS,
+    min_pairs: int = MZ_MIN_PAIRS,
+) -> tuple[np.ndarray, np.ndarray]:
+    """(odsečak, nagib) MZ regresije y = alpha + beta * y_hat za svaki red,
+    OLS nad parovima realizovanim u [o - window, o - 1]; NaN gde je parova
+    manje od `min_pairs` ili je y_hat u prozoru konstantan."""
+    x = np.asarray(y_hat, dtype=float)
+    y = np.asarray(y_true, dtype=float)
+    n_, sx, sy, sxx, sxy = _trailing_sums(
+        origin_idx, realized_idx, [np.ones(len(x)), x, y, x * x, x * y], window=window
+    )
+    with np.errstate(divide="ignore", invalid="ignore"):
+        denom = n_ * sxx - sx * sx
+        ok = (n_ >= min_pairs) & (denom > 0)
+        slope = np.where(ok, (n_ * sxy - sx * sy) / np.where(ok, denom, 1.0), np.nan)
+        intercept = np.where(ok, (sy - slope * sx) / np.where(ok, n_, 1.0), np.nan)
+    return intercept, slope

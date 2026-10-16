@@ -17,7 +17,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from projekat.evaluation.dm_test import diebold_mariano
+from projekat.evaluation.dm_test import collapse_to_daily, diebold_mariano
 
 RELATIVE_QLIKE_BASELINE = "log_har"
 
@@ -106,7 +106,11 @@ def ranking_disagreement_table(
 
     `daily_losses` nosi jedan red po (model, design_id, horizon, symbol,
     date) sa dnevnim gubicima. Vraća jedan red po obeleženom paru --
-    prazan okvir znači da nigde nema pravog neslaganja."""
+    prazan okvir znači da nigde nema pravog neslaganja.
+
+    Obe serije gubitaka se SVODE NA DNEVNU (collapse_to_daily) pre DM
+    testova, iz istog razloga kao svuda gde se DM primenjuje na panel --
+    vidi docstring evaluation/dm_test.py."""
     rows = []
     for (horizon, design_id), cell in daily_losses.groupby(["horizon", "design_id"], observed=True):
         wide_q = cell.pivot_table(index=["date", "symbol"], columns="model", values=qlike_col)
@@ -114,7 +118,10 @@ def ranking_disagreement_table(
         common = wide_q.dropna().index.intersection(wide_m.dropna().index)
         if len(common) < 3:
             continue
-        wide_q, wide_m = wide_q.loc[common], wide_m.loc[common]
+        wide_q = collapse_to_daily(wide_q.loc[common])
+        wide_m = collapse_to_daily(wide_m.loc[common])
+        if len(wide_q) < 3:
+            continue
 
         models = sorted(wide_q.columns)
         for i, a in enumerate(models):

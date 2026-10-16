@@ -100,7 +100,17 @@ def verify_split_adjustment(daily_close: dict[str, float], splits: list[SplitEve
             continue
         actual_logret = math.log(this_close / prev_close)
         expected_logret = -split.log_ratio  # cena pada za odnos splita ako podaci nisu prilagođeni
-        if abs(actual_logret - expected_logret) < tolerance:
+        # Dve hipoteze: neprilagođeno (prinos ~ expected) i prilagođeno
+        # (prinos ~ 0, plus običan dnevni šum). Prijavljuje se samo kad je
+        # prinos BLIŽI neprilagođenom padu nego nuli -- sam apsolutni prag
+        # od 0.15 nije dovoljan za male korporativne akcije (spin-off od
+        # ~5%): tada i sasvim običan dan upadne u prag. Izmereno: PFE
+        # 2020-11-17 (Viatris, 500:527, očekivano -0.053) i VZ 2010-07-02
+        # (Frontier, očekivano -0.064) imaju prinose +0.013/+0.009 i čiste
+        # intradnevne podatke, a bili su lažno odbačeni; MT 2016-03-14
+        # (-0.221 naspram očekivanih -0.230) i dalje pada, ispravno.
+        closer_to_unadjusted = abs(actual_logret - expected_logret) < abs(actual_logret)
+        if abs(actual_logret - expected_logret) < tolerance and closer_to_unadjusted:
             raise UnadjustedDataError(
                 f"{split.symbol}: log return {actual_logret:.3f} on {split.effective_date} "
                 f"matches unadjusted split ratio {split.split_from}:{split.split_to} "

@@ -1,52 +1,37 @@
 """Persistence layer for the raw forecast tables.
 
-WHY THIS EXISTS
-===============
-`runner.py::run_all` accumulates every forecast row in memory and
-concatenates only at the very end. On the full grid that is ~106 million
-rows (~10.6 GB) plus an equally large validation frame -- it does not fit
-in RAM, and a crash at fit 13,000 loses everything. This module replaces
-that with one table written per combination, immediately, so peak memory
-is the size of a single table and an interrupted run can resume.
-
-ONE RUN DIRECTORY, EVERY MODEL GROUP WRITES INTO IT
-===================================================
-The econometric models go first (`log_har` is the benchmark without which
-no other model's relative QLIKE is computable), but `arfima`, `mem`, the
-tree models, PatchTST and the `ttm_*` models from later sessions write
-into the SAME directory and the SAME index, with no change to this file.
-That is why a table name carries every field of the combination,
-including `seed`, which the econometric models do not have (`none`) and
-PatchTST does.
+One run directory; every model group writes into it; one table per
+combination (model x design x seed), written the moment its walk-forward
+finishes, so peak memory is one table and an interrupted run resumes.
 
     <run-dir>/
         manifest.json            run provenance (see RunManifest)
         index.parquet            one row per written table
         failures.jsonl           one row per failed combination
-        tables/<name>.parquet    raw forecast rows
+        regime_labels.parquet    one regime label per (symbol, date)
+        tables/<name>.parquet    forecast rows: every horizon, every day
+                                 (warm-up year included, flagged is_warmup)
+
+There is no validation split any more: the back-transform correction and
+the Mincer-Zarnowitz coefficients come from each model's own trailing
+out-of-sample errors (model/backtransform.py) and are already inside the
+table.
 
 FILENAME GRAMMAR
 ================
-    model=<m>__design=<d>__h=<h>__w=<w>__split=<s>__seed=<seed>.parquet
+    model=<m>__design=<d>__seed=<seed>.parquet
 
-Fields are `key=value` separated by `__`, in a fixed order, the same way
-`MeasurementDesign.id` is built -- `parse_name` is the exact inverse of
-`build_name`, and this is the ONLY place a table name is taken apart. A
-value that does not exist is the literal `none` (never an empty string),
-so the field count never varies and the round-trip stays unambiguous.
-
-`design` itself contains `__` (e.g. `5m__bpv__bns`), so parsing splits on
-`key=` boundaries, never on a plain `split("__")` -- the same trap that
-makes `evaluation/anova.py::parse_design_id` the single parsing site for
-`design_id`.
+Fields are `key=value` separated by `__`, in a fixed order -- `parse_name`
+is the exact inverse of `build_name` and the ONLY place a table name is
+taken apart. `design` itself contains `__` (e.g. `5m__bpv__bns`), so
+parsing splits on `key=` boundaries, never on a plain `split("__")`. A
+missing seed is the literal `none`.
 
 ATOMICITY
 =========
 Each table is written to `<name>.tmp` and then `os.replace()`d onto its
-final name. `os.replace` is atomic within a filesystem on both Windows
-and POSIX, so a reader never sees a half-written parquet: the file at the
-final name is either complete or absent. An interrupt between the two
-steps leaves only a `.tmp`, which `--resume` ignores and overwrites.
+final name (atomic on Windows and POSIX), so a reader never sees a
+half-written parquet.
 """
 
 from __future__ import annotations
@@ -66,33 +51,19 @@ TABLES_DIRNAME = "tables"
 INDEX_FILENAME = "index.parquet"
 MANIFEST_FILENAME = "manifest.json"
 FAILURES_FILENAME = "failures.jsonl"
+REGIME_LABELS_FILENAME = "regime_labels.parquet"
 
-SPLITS = ("test", "validation")
-
-# Fixed field order -- build_name and parse_name both depend on it.
-_FIELDS = ("model", "design", "h", "w", "split", "seed")
 _NONE = "none"
-
-# Values must contain neither "=" nor "__", or the name is ambiguous.
 _VALUE_RE = re.compile(r"^[A-Za-z0-9._+-]+$")
 
 
 @dataclass(frozen=True)
 class TableKey:
-    """One combination = one table. `seed` is None for deterministic
-    models; `window_id` is 1-based (w=1..11) to match `--windows 1-11` on
-    the command line."""
+    """One combination = one table. `seed` is None for deterministic models."""
 
     model: str
     design_id: str
-    horizon: int
-    window_id: int
-    split: str
     seed: int | None = None
-
-    def __post_init__(self) -> None:
-        if self.split not in SPLITS:
-            raise ValueError(f"split must be one of {SPLITS}, got {self.split!r}")
 
 
 def build_name(key: TableKey) -> str:
@@ -100,18 +71,10 @@ def build_name(key: TableKey) -> str:
     parts = {
         "model": key.model,
         "design": key.design_id,
-        "h": str(key.horizon),
-        "w": str(key.window_id),
-        "split": key.split,
         "seed": _NONE if key.seed is None else str(key.seed),
     }
     for name, value in parts.items():
-        if name == "design":
-            # design_id legitimately contains "__" (5m__bpv__bns); only its
-            # segments are checked
-            segments = value.split("__")
-        else:
-            segments = [value]
+        segments = value.split("__") if name == "design" else [value]
         for segment in segments:
             if not _VALUE_RE.match(segment):
                 raise ValueError(f"field value {name}={value!r} is not filename-safe")
@@ -119,35 +82,16 @@ def build_name(key: TableKey) -> str:
 
 
 def parse_name(filename: str) -> TableKey:
-    """Filename -> TableKey. Exact inverse of build_name.
-
-    Splits on `key=` boundaries, NOT on `__`, because `design` itself
-    contains `__`. The only place in the codebase where a table name is
-    taken apart."""
+    """Filename -> TableKey. Exact inverse of build_name."""
     stem = filename[:-len(".parquet")] if filename.endswith(".parquet") else filename
-
-    # Only `design` may contain `__`; every other field is restricted to
-    # its own narrow character set, which keeps the parse unambiguous even
-    # though `design` is a non-greedy `.+?`.
-    pattern = (
-        r"^model=(?P<model>[^=]+?)"
-        r"__design=(?P<design>.+?)"
-        r"__h=(?P<h>\d+)"
-        r"__w=(?P<w>\d+)"
-        r"__split=(?P<split>[a-z]+)"
-        r"__seed=(?P<seed>none|\d+)$"
-    )
+    pattern = r"^model=(?P<model>[^=]+?)__design=(?P<design>.+?)__seed=(?P<seed>none|\d+)$"
     match = re.match(pattern, stem)
     if not match:
         raise ValueError(f"table name does not match the grammar: {filename!r}")
-
     seed_raw = match.group("seed")
     return TableKey(
         model=match.group("model"),
         design_id=match.group("design"),
-        horizon=int(match.group("h")),
-        window_id=int(match.group("w")),
-        split=match.group("split"),
         seed=None if seed_raw == _NONE else int(seed_raw),
     )
 
@@ -157,9 +101,6 @@ def parse_name(filename: str) -> TableKey:
 
 @dataclass(frozen=True)
 class RunManifest:
-    """Run provenance. Same shape as data/vault.py::Manifest -- a frozen
-    dataclass -> asdict -> json.dumps(indent=2) -> write_text."""
-
     run_id: str
     created_at: str
     argv: list[str] = field(default_factory=list)
@@ -168,7 +109,7 @@ class RunManifest:
     models: list[str] = field(default_factory=list)
     grids: list[str] = field(default_factory=list)
     horizons: list[int] = field(default_factory=list)
-    window_ids: list[int] = field(default_factory=list)
+    scheme: dict = field(default_factory=dict)
     panel_path: str | None = None
     panel_sha256: str | None = None
     python: str = ""
@@ -189,7 +130,7 @@ def create_run_dir(run_id: str, *, base: Path | None = None) -> Path:
 
 def write_manifest(run_dir: Path, manifest: RunManifest) -> Path:
     path = run_dir / MANIFEST_FILENAME
-    path.write_text(json.dumps(asdict(manifest), indent=2), encoding="utf-8")
+    path.write_text(json.dumps(asdict(manifest), indent=2, default=str), encoding="utf-8")
     return path
 
 
@@ -207,20 +148,21 @@ def table_path(run_dir: Path, key: TableKey) -> Path:
     return run_dir / TABLES_DIRNAME / build_name(key)
 
 
-def write_table(run_dir: Path, key: TableKey, frame: pd.DataFrame) -> Path:
-    """Atomic write: `.tmp` then os.replace(). An interrupt between the two
-    steps leaves only a `.tmp`, which no reader accepts as a table."""
-    final = table_path(run_dir, key)
+def _atomic_parquet(frame: pd.DataFrame, final: Path) -> Path:
     final.parent.mkdir(parents=True, exist_ok=True)
     tmp = final.with_suffix(".tmp")
     try:
         frame.to_parquet(tmp, index=False)
         os.replace(tmp, final)
     except BaseException:
-        # including KeyboardInterrupt: never leave a half-written .tmp behind
         tmp.unlink(missing_ok=True)
         raise
     return final
+
+
+def write_table(run_dir: Path, key: TableKey, frame: pd.DataFrame) -> Path:
+    """Atomic write: `.tmp` then os.replace()."""
+    return _atomic_parquet(frame, table_path(run_dir, key))
 
 
 def read_table(run_dir: Path, key: TableKey) -> pd.DataFrame:
@@ -229,10 +171,7 @@ def read_table(run_dir: Path, key: TableKey) -> pd.DataFrame:
 
 # -- index ----------------------------------------------------------------
 
-INDEX_COLUMNS = (
-    "model", "design_id", "horizon", "window_id", "split", "seed",
-    "filename", "n_rows", "written_at",
-)
+INDEX_COLUMNS = ("model", "design_id", "seed", "filename", "n_rows", "written_at")
 
 
 def index_path(run_dir: Path) -> Path:
@@ -243,9 +182,6 @@ def index_row(key: TableKey, path: Path, n_rows: int) -> dict:
     return {
         "model": key.model,
         "design_id": key.design_id,
-        "horizon": key.horizon,
-        "window_id": key.window_id,
-        "split": key.split,
         "seed": -1 if key.seed is None else key.seed,   # -1 sentinel: parquet dislikes a mixed type
         "filename": path.name,
         "n_rows": int(n_rows),
@@ -261,29 +197,21 @@ def read_index(run_dir: Path) -> pd.DataFrame:
 
 
 def append_index(run_dir: Path, rows: list[dict]) -> Path:
-    """Append rows to the index, atomically. The index is derived data --
-    it can be reconstructed from the filenames in tables/ via parse_name --
-    but it is kept as parquet so `--resume` need not list a directory
-    holding tens of thousands of files."""
+    """Append rows to the index, atomically. The index is derived data (it
+    can be rebuilt from tables/ via parse_name)."""
     path = index_path(run_dir)
     existing = read_index(run_dir)
     combined = pd.concat([existing, pd.DataFrame(rows)], ignore_index=True) if rows else existing
     if combined.empty:
         return path
     combined = combined.drop_duplicates(subset=["filename"], keep="last")
-    tmp = path.with_suffix(".tmp")
-    try:
-        combined.to_parquet(tmp, index=False)
-        os.replace(tmp, path)
-    except BaseException:
-        tmp.unlink(missing_ok=True)
-        raise
-    return path
+    return _atomic_parquet(combined, path)
 
 
 def rebuild_index(run_dir: Path) -> pd.DataFrame:
-    """Reconstruct the index from the filenames themselves (parse_name). A
-    safety net for when the index is lost or falls behind tables/."""
+    """Reconstruct the index from the filenames themselves (parse_name)."""
+    import pyarrow.parquet as pq
+
     rows = []
     for path in sorted((run_dir / TABLES_DIRNAME).glob("*.parquet")):
         try:
@@ -291,26 +219,24 @@ def rebuild_index(run_dir: Path) -> pd.DataFrame:
         except ValueError:
             continue
         try:
-            n_rows = pd.read_parquet(path, columns=["date"]).shape[0]
+            n_rows = pq.ParquetFile(path).metadata.num_rows
         except Exception:
             n_rows = -1
         rows.append(index_row(key, path, n_rows))
     frame = pd.DataFrame(rows, columns=list(INDEX_COLUMNS))
     if not frame.empty:
-        tmp = index_path(run_dir).with_suffix(".tmp")
-        frame.to_parquet(tmp, index=False)
-        os.replace(tmp, index_path(run_dir))
+        _atomic_parquet(frame, index_path(run_dir))
     return frame
 
 
-def completed_keys(run_dir: Path) -> set[tuple]:
-    """Combinations that are ALREADY written, for `--resume`. Returns a set
-    of tuples aligned with `TableKey`'s fields so a caller can skip without
-    re-parsing names.
+def key_tuple(key: TableKey) -> tuple:
+    return (key.model, key.design_id, key.seed)
 
-    Verifies the file actually exists: an index entry without its file
-    (deleted by hand, say) must not count as complete, or the combination
-    would be silently skipped and go missing from the results."""
+
+def completed_keys(run_dir: Path) -> set[tuple]:
+    """Combinations ALREADY written, for `--resume`. An index entry whose
+    file is gone does not count, or the combination would silently go
+    missing from the results."""
     index = read_index(run_dir)
     if index.empty:
         return set()
@@ -320,29 +246,31 @@ def completed_keys(run_dir: Path) -> set[tuple]:
         if not (tables / row.filename).exists():
             continue
         seed = None if row.seed == -1 else int(row.seed)
-        done.add((row.model, row.design_id, int(row.horizon), int(row.window_id), row.split, seed))
+        done.add((row.model, row.design_id, seed))
     return done
 
 
-def key_tuple(key: TableKey) -> tuple:
-    return (key.model, key.design_id, key.horizon, key.window_id, key.split, key.seed)
+def completed_keys_from_files(run_dir: Path) -> set[tuple]:
+    """`completed_keys` without the index: parse the table filenames. Used
+    when several processes share one run dir (the index has no lock)."""
+    done = set()
+    for path in (run_dir / TABLES_DIRNAME).glob("*.parquet"):
+        try:
+            done.add(key_tuple(parse_name(path.name)))
+        except ValueError:
+            continue
+    return done
 
 
 # -- failures -------------------------------------------------------------
 
 
 def append_failure(run_dir: Path, key: TableKey, exc: BaseException) -> Path:
-    """Append a failure to failures.jsonl. A failed combination must NEVER
-    disappear silently from the results -- without this record, a model
-    that crashes on one design looks exactly like a model that was never
-    requested for that design."""
+    """A failed combination must NEVER disappear silently from the results."""
     path = run_dir / FAILURES_FILENAME
     record = {
         "model": key.model,
         "design_id": key.design_id,
-        "horizon": key.horizon,
-        "window_id": key.window_id,
-        "split": key.split,
         "seed": key.seed,
         "error_type": type(exc).__name__,
         "error": str(exc)[:2000],
@@ -361,25 +289,53 @@ def read_failures(run_dir: Path) -> pd.DataFrame:
     return pd.DataFrame(records)
 
 
+# -- regime labels --------------------------------------------------------
+
+
+def write_regime_labels(run_dir: Path, labels: pd.DataFrame) -> Path:
+    return _atomic_parquet(labels, run_dir / REGIME_LABELS_FILENAME)
+
+
+def read_regime_labels(run_dir: Path) -> pd.DataFrame | None:
+    path = run_dir / REGIME_LABELS_FILENAME
+    return pd.read_parquet(path) if path.exists() else None
+
+
 # -- reading back ---------------------------------------------------------
 
 
-def load_split(run_dir: Path, split: str, *, models: list[str] | None = None) -> pd.DataFrame:
-    """Load every table of one split back into a single frame.
+def load_forecasts(
+    run_dir: Path,
+    *,
+    horizon: int | None = None,
+    models: list[str] | None = None,
+    columns: list[str] | None = None,
+    include_warmup: bool = False,
+) -> pd.DataFrame:
+    """Forecast rows of the run, filtered while reading (pyarrow filters),
+    so a single horizon of the full grid never materializes the others.
+    The warm-up year is left out unless asked for: it is never evaluated."""
+    import pyarrow as pa
+    import pyarrow.parquet as pq
 
-    This is the point where memory grows again, so use it only when the
-    evaluation genuinely needs a combined frame; for a large grid, filter
-    `models` or read table by table via read_index/read_table."""
-    index = read_index(run_dir)
+    index = rebuild_index(run_dir) if not index_path(run_dir).exists() else read_index(run_dir)
     if index.empty:
         return pd.DataFrame()
-    wanted = index[index["split"] == split]
     if models is not None:
-        wanted = wanted[wanted["model"].isin(models)]
-    frames = []
-    tables = run_dir / TABLES_DIRNAME
-    for filename in wanted["filename"]:
-        path = tables / filename
-        if path.exists():
-            frames.append(pd.read_parquet(path))
-    return pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+        index = index[index["model"].isin(models)]
+    filters = []
+    if horizon is not None:
+        filters.append(("horizon", "=", int(horizon)))
+    if not include_warmup:
+        filters.append(("is_warmup", "=", False))
+    tables = []
+    for filename in index["filename"]:
+        path = run_dir / TABLES_DIRNAME / filename
+        if not path.exists():
+            continue
+        table = pq.read_table(path, columns=columns, filters=filters or None)
+        if table.num_rows:
+            tables.append(table)
+    if not tables:
+        return pd.DataFrame()
+    return pa.concat_tables(tables, promote_options="permissive").to_pandas()

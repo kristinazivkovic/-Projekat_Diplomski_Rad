@@ -1,87 +1,78 @@
-"""Naknadna (post-hoc) stratifikacija: modeli se treniraju jednom po
-(design_id, prozor); rezultati se obeležavaju režimom i jump_day oznakom,
-pa se tek onda filtriraju -- nikad se ne treniraju ponovo po stratumu.
+"""Naknadna (post-hoc) stratifikacija: modeli se ne treniraju po stratumu;
+već dobijene prognoze se obeležavaju režimom i jump_day oznakom, pa se tek
+onda grupišu.
 
-Odluka C6: granice režima se računaju SAMO JEDNOM iz skupa za treniranje
-prozora 1 (2010-2014) i drže se FIKSNE tokom cele studije -- u suprotnom bi
-oznaka režima za dati dan mogla da se menja između "mirno" i "turbulentno"
-kako se usidreni (anchored) prozor za treniranje širi, čineći stratifikovanu
-tabelu nedefinisanom (isti kalendarski dan bi pripadao različitim
-stratumima u zavisnosti od toga koji prozor je proizveo tu prognozu).
+REŽIM: JEDNA OZNAKA PO (simbol, dan), ISTA ZA SVE DIZAJNE
+=========================================================
+Oznaka se računa iz RV_m na mreži config.REGIME_GRID (5m), naspram granice
+= config.REGIME_QUANTILE (medijana) 5m RV_m u PRVOM periodu obuke (svi
+redovi pre config.FIRST_FORECAST_DATE, objedinjeno preko simbola).
+
+  * Iz JEDNE mreže, ne iz RV_m samog reda: RV_m na 1m je naduvan šumom
+    mikrostrukture u odnosu na 15m, pa bi isti dan češće bio "turbulentan"
+    na 1m -- režim bi tada nosio deo varijanse Faktora A1, a u ANOVA je
+    režim blokirajući faktor.
+  * Granica se računa JEDNOM, iz prvog perioda obuke, i ne pomera se: dan
+    mora imati istu oznaku bez obzira na to koja je ponovna ocena napravila
+    prognozu.
+
+Oznake se pišu u run dir (store.write_regime_labels) i spajaju sa
+prognozama po (simbol, dan) u results/tables.py::attach_strata.
 """
 
 from __future__ import annotations
 
-import json
-from datetime import datetime, timezone
-from pathlib import Path
-
 import pandas as pd
 
-from projekat.config import PROCESSED_DIR
-
-REGIME_BOUNDARY_PATH = PROCESSED_DIR / "regime_boundary.json"
+from projekat.config import FIRST_FORECAST_DATE, REGIME_GRID, REGIME_QUANTILE
 
 
-def compute_and_persist_regime_boundary(window1_train_df: pd.DataFrame, *, quantile: float = 0.5) -> float:
-    """Izračunato samo jednom, isključivo iz podataka za treniranje prozora
-    1, i sačuvano na disk kako bi bilo proverljivo i da se ne bi tiho
-    menjalo između pokretanja.
+def compute_regime_labels(
+    panel_df: pd.DataFrame,
+    *,
+    grid: str = REGIME_GRID,
+    quantile: float = REGIME_QUANTILE,
+    first_forecast: str = FIRST_FORECAST_DATE,
+) -> tuple[pd.DataFrame, dict]:
+    """(oznake po (symbol, date), provenijencija granice)."""
+    from projekat.evaluation.anova import parse_design_id
 
-    Uz prag se zapisuje i PROVENIJENCIJA (broj redova, simboli, raspon
-    datuma). Bez toga je granica izračunata na sitnom probnom panelu
-    bajt-identična onoj sa punog panela od 30 simbola, pa bi se tiho
-    koristila za obeležavanje cele studije -- greška koja ne podiže
-    nijedan izuzetak i vidi se tek u stratifikovanoj tabeli."""
-    threshold = float(window1_train_df["RV_m"].quantile(quantile))
-    payload = {
+    grids = {d: parse_design_id(d)["grid"] for d in panel_df["design_id"].unique()}
+    on_grid = panel_df[panel_df["design_id"].map(grids) == grid]
+    if on_grid.empty:
+        raise ValueError(f"panel nema nijedan dizajn na mreži {grid!r} -- režim se računa iz {grid} RV_m")
+    # RV_m zavisi samo od mreže, pa su svi dizajni jedne mreže isti
+    rv_m = on_grid[["symbol", "date", "RV_m"]].drop_duplicates(["symbol", "date"])
+    train = rv_m[(rv_m["date"] < pd.Timestamp(first_forecast)) & rv_m["RV_m"].notna()]
+    if train.empty:
+        raise ValueError(f"nema {grid} RV_m pre {first_forecast} za granicu režima")
+    threshold = float(train["RV_m"].quantile(quantile))
+    labels = rv_m.assign(regime=tag_regime(rv_m, threshold=threshold))
+    labels.loc[rv_m["RV_m"].isna().to_numpy(), "regime"] = "unknown"
+    provenance = {
+        "grid": grid,
         "quantile": quantile,
         "threshold": threshold,
-        "n_rows": int(len(window1_train_df)),
-        "n_symbols": int(window1_train_df["symbol"].nunique()) if "symbol" in window1_train_df else None,
-        "symbols": sorted(window1_train_df["symbol"].unique().tolist()) if "symbol" in window1_train_df else None,
-        "date_min": str(window1_train_df["date"].min()) if "date" in window1_train_df else None,
-        "date_max": str(window1_train_df["date"].max()) if "date" in window1_train_df else None,
-        "computed_at": datetime.now(timezone.utc).isoformat(),
+        "first_training_period_end": first_forecast,
+        "n_rows": int(len(train)),
+        "n_symbols": int(train["symbol"].nunique()),
+        "date_min": str(train["date"].min().date()),
+        "date_max": str(train["date"].max().date()),
     }
-    REGIME_BOUNDARY_PATH.parent.mkdir(parents=True, exist_ok=True)
-    REGIME_BOUNDARY_PATH.write_text(json.dumps(payload, indent=2))
-    return threshold
+    return labels[["symbol", "date", "regime"]].reset_index(drop=True), provenance
 
 
-def regime_boundary_provenance() -> dict | None:
-    """Šta je granica zapravo videla kad je računata. Vrati None ako fajl
-    ne postoji ili je star (bez polja provenijencije)."""
-    if not REGIME_BOUNDARY_PATH.exists():
-        return None
-    payload = json.loads(REGIME_BOUNDARY_PATH.read_text())
-    return payload if "n_rows" in payload else None
-
-
-def load_regime_boundary() -> float:
-    if not REGIME_BOUNDARY_PATH.exists():
-        raise FileNotFoundError(
-            f"{REGIME_BOUNDARY_PATH} nije pronađen -- pozovi compute_and_persist_regime_boundary "
-            "nad podacima za treniranje prozora 1 pre obeležavanja bilo kog režima."
-        )
-    return json.loads(REGIME_BOUNDARY_PATH.read_text())["threshold"]
-
-
-def tag_regime(df: pd.DataFrame, *, threshold: float | None = None) -> pd.Series:
-    """Mirno naspram turbulentno, u odnosu na FIKSNU granicu iz prozora 1 --
-    nikad u odnosu na sopstvenu raspodelu prozora koji poziva funkciju."""
-    t = threshold if threshold is not None else load_regime_boundary()
-    return (df["RV_m"] > t).map({True: "turbulent", False: "calm"})
+def tag_regime(df: pd.DataFrame, *, threshold: float) -> pd.Series:
+    """Mirno naspram turbulentno u odnosu na FIKSNU granicu."""
+    return (df["RV_m"] > threshold).map({True: "turbulent", False: "calm"})
 
 
 def tag_jump_day(df: pd.DataFrame) -> pd.Series:
-    return df["jump_flag"].map({True: "jump", False: "no_jump"})
+    return df["jump_flag"].astype(bool).map({True: "jump", False: "no_jump"})
 
 
 def stratified_table(results_df: pd.DataFrame, *, group_cols: list[str] | None = None) -> pd.DataFrame:
-    """results_df: jedan red po prognozi, sa kolonom gubitka i već
-    prikačenim oznakama regime/jump_day/horizon. Vraća prosečan gubitak
-    grupisan po traženim stratumima (podrazumevano: horizont x režim x
-    jump_day)."""
+    """Prosečan gubitak grupisan po stratumima (podrazumevano: horizont x
+    režim x jump_day)."""
     cols = group_cols or ["horizon", "regime", "jump_day"]
     return results_df.groupby(cols, observed=True).mean(numeric_only=True).reset_index()

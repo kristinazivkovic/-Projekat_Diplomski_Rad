@@ -21,6 +21,10 @@ import pandas as pd
 
 class Estimator(Protocol):
     name: str
+    # Asimptotska varijansa razlike (ocena - RV) u BNS testu, u jedinicama
+    # integrisane kvartičnosti. Svaki ocenjivač je deklariše u sopstvenom
+    # fajlu, pa BNS test radi za novi ocenjivač bez izmene bns.py.
+    bns_theta: float
 
     def __call__(self, r: np.ndarray, **kwargs) -> float:
         """Ocena kontinuirane varijanse otporna na skokove, iz intradnevnih

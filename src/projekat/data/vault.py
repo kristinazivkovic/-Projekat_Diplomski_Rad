@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 import ssl
 import warnings
 from dataclasses import asdict, dataclass
@@ -66,11 +67,38 @@ def _manifest_path(parquet_path: Path) -> Path:
     return parquet_path.with_suffix(parquet_path.suffix + ".manifest.json")
 
 
-def fetch_1m(symbol: str, start: str, end: str, *, force: bool = False) -> Path:
+def _resolve_dataset(client, symbol: str) -> str:
+    """Isto razrešavanje skupa podataka kao u ``client.history()`` (opcije
+    nikad ne pobeđuju), ali nad katalogom koji klijent kešira -- jedan
+    /catalog poziv po klijentu, a ne po komadu."""
+    found = sorted({r["dataset"] for r in client.datasets() if r["symbol"] == symbol})
+    picks = [d for d in found if d != "options"] or found
+    if not picks:
+        raise RuntimeError(f"'{symbol}' is not in the vault catalog")
+    if len(picks) > 1:
+        raise RuntimeError(f"'{symbol}' exists in {picks}; pass dataset= to pick one")
+    return picks[0]
+
+
+def fetch_1m(symbol: str, start: str, end: str, *, force: bool = False,
+             client=None, before_create=None) -> Path:
     """Preuzmi 1-minutne svećice za ``symbol`` u opsegu [start, end) preko
     masovnog izvoza iz vault-a, čuvajući Parquet fajl i manifest porekla
     podataka u RAW_DIR. Idempotentno: preskače preuzimanje ako manifest već
     odgovara traženom opsegu, osim ako je ``force=True``.
+
+    Namerno ne koristi ``client.history()``, iz dva razloga:
+      * ``history()`` snima u ``stocks_{SYM}_1m.parquet`` bez obzira na
+        opseg, pa dva komada istog simbola dele isti ``.part`` fajl -- a
+        nastavak prekinutog preuzimanja bi nalepio bajtove DRUGOG posla na
+        stari ``.part``. Ovde svaki komad ima sopstveni privremeni direktorijum.
+      * ``job_id`` se čuva na disku pre čekanja, pa pad/Ctrl-C ne troši
+        izvoznu kvotu: ponovno pokretanje nastavlja postojeći posao umesto
+        da pravi novi.
+
+    ``before_create`` se poziva neposredno pre svakog POST /export -- tu
+    ``scripts/fetch_data.py`` drži globalni razmak i prekidač za 429, jer
+    kvota ograničava samo KREIRANJE poslova, ne čekanje ni preuzimanje.
     """
     dest_dir = RAW_DIR / "1m"
     dest_dir.mkdir(parents=True, exist_ok=True)
@@ -80,18 +108,42 @@ def fetch_1m(symbol: str, start: str, end: str, *, force: bool = False) -> Path:
     if not force and parquet_path.exists() and manifest_path.exists():
         return parquet_path
 
-    client = _client()
-    saved_path = client.history(
-        symbol,
-        timeframe="1m",
-        start=start,
-        end=end,
-        dest=str(dest_dir),
-        dataframe=False,
-    )
-    saved_path = Path(saved_path)
-    if saved_path != parquet_path:
-        saved_path.replace(parquet_path)
+    from lse import LSEError
+
+    client = client or _client()
+    key = f"{symbol}_1m_{start}_{end}"
+    job_file = dest_dir / ".jobs" / f"{key}.job"
+    tmp_dir = dest_dir / ".tmp" / key
+    job_file.parent.mkdir(parents=True, exist_ok=True)
+
+    info = None
+    job_id = job_file.read_text().strip() if job_file.exists() and not force else ""
+    if job_id:
+        try:
+            info = client._vault_wait(job_id, 3.0, 1800.0)
+        except LSEError as exc:
+            # istekao/neuspeo/nepoznat posao -> pravi se novi; "still building"
+            # posle 30 min znači da posao i dalje radi, pa se čuva za sledeći put
+            if "still" in str(exc):
+                raise
+            job_id = ""
+    if not job_id:
+        dataset = _resolve_dataset(client, symbol)
+        if before_create is not None:
+            before_create()
+        job = client._vault_call("/export", {
+            "dataset": dataset, "symbol": symbol, "timeframe": "1m",
+            "start": start, "end": end, "format": "parquet",
+        })
+        job_id = job["job_id"]
+        job_file.write_text(job_id)
+        # .part iz nekog ranijeg posla ne sme da se nastavi bajtovima novog
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        info = client._vault_wait(job_id, 3.0, 1800.0)
+
+    saved_path = Path(client._vault_download(job_id, "export.parquet", str(tmp_dir), info))
+    saved_path.replace(parquet_path)
+    shutil.rmtree(tmp_dir, ignore_errors=True)
 
     import pyarrow.parquet as pq
 
@@ -108,6 +160,7 @@ def fetch_1m(symbol: str, start: str, end: str, *, force: bool = False) -> Path:
         path=str(parquet_path),
     )
     manifest_path.write_text(json.dumps(asdict(manifest), indent=2))
+    job_file.unlink(missing_ok=True)
     return parquet_path
 
 
@@ -164,14 +217,16 @@ def _chunk_ranges(start: str, end: str, years: int = SAFE_CHUNK_YEARS) -> list[t
 
 
 def fetch_1m_chunked(symbol: str, start: str, end: str, *, force: bool = False,
-                     years: int = SAFE_CHUNK_YEARS) -> list[Path]:
+                     years: int = SAFE_CHUNK_YEARS, client=None,
+                     before_create=None) -> list[Path]:
     """Preuzmi [start, end) u komadima koji sigurno staju ispod izvoznog
     limita, i vrati putanje svih komada.
 
     Svaki komad je zaseban keš unos (sopstveni manifest), pa se prekinuto
     preuzimanje nastavlja po komadu, a ne od početka simbola."""
     return [
-        fetch_1m(symbol, chunk_start, chunk_end, force=force)
+        fetch_1m(symbol, chunk_start, chunk_end, force=force, client=client,
+                 before_create=before_create)
         for chunk_start, chunk_end in _chunk_ranges(start, end, years)
     ]
 

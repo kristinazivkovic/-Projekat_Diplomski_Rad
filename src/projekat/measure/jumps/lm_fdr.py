@@ -41,7 +41,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from projekat.config import LM_FDR_TRAILING_WINDOW
+from projekat.config import LM_FDR_Q, LM_FDR_TRAILING_WINDOW
 from projekat.measure.jumps.lee_mykland import lee_mykland
 from projekat.measure.protocols import JumpVerdict
 from projekat.measure.registry import register_jump_test
@@ -55,7 +55,7 @@ class DayStat:
     n: int
 
 
-def benjamini_hochberg_significant(p_values: list[float], q: float = 0.05) -> list[bool]:
+def benjamini_hochberg_significant(p_values: list[float], q: float = LM_FDR_Q) -> list[bool]:
     """Standardna BH procedura: vraća masku značajnosti po elementu."""
     m = len(p_values)
     if m == 0:
@@ -71,11 +71,14 @@ def benjamini_hochberg_significant(p_values: list[float], q: float = 0.05) -> li
     return [p <= cutoff for p in p_values]
 
 
-def lm_fdr_significance_series(day_stats: list[DayStat], *, window: int = LM_FDR_TRAILING_WINDOW, q: float = 0.05) -> dict[str, tuple[bool, bool]]:
+def lm_fdr_significance_series(day_stats: list[DayStat], *, window: int = LM_FDR_TRAILING_WINDOW, q: float = LM_FDR_Q) -> dict[str, tuple[bool, bool]]:
     """Za date LM statistike po danu, u HRONOLOŠKOM REDOSLEDU, izračunaj
     lm_fdr značajnost za svaki dan koristeći klizni prozor od `window`
     PRETHODNIH dana plus tekućeg dana (kauzalno -- nikad ne gleda unapred).
-    Vraća {dan: (značajno, is_warmup)}.
+    Dnevna p-vrednost (DayStat.p_value) je Gumbelova
+    p = 1 - exp(-exp(-(max|L| - C_n)/S_n)) iz _gumbel.exceedance_p_value.
+    Vraća {dan: (značajno, is_warmup)}. Tokom zagrevanja (prvih `window`
+    dana simbola) dan se ocenjuje običnim LM pragom (LM_CONFIDENCE).
     """
     out: dict[str, tuple[bool, bool]] = {}
     for i, stat in enumerate(day_stats):

@@ -38,4 +38,8 @@ def bpv(r: np.ndarray, **kwargs) -> float:
 
 
 bpv.name = "bpv"
+# Asimptotska varijansa razlike (BPV - RV) u BNS testu, u jedinicama
+# integrisane kvartičnosti: theta = (pi/2)^2 + pi - 5 (Barndorff-Nielsen i
+# Shephard 2006).
+bpv.bns_theta = (math.pi / 2) ** 2 + math.pi - 5
 register_estimator(bpv)
