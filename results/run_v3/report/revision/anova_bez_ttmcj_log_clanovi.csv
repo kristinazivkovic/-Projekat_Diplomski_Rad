@@ -1,0 +1,10 @@
+,partial_eta_sq
+"C(model, Sum)",0.00158432476964514
+"C(grid, Sum)",0.022852952392738442
+"C(estimator, Sum)",0.00043884194282990934
+"C(jump_test, Sum)",4.3198338460056716e-05
+"C(regime, Sum)",0.00048504465307176237
+"C(symbol, Sum)",0.0018859700518790996
+"C(grid, Sum):C(estimator, Sum)",0.00017000751491202582
+"C(grid, Sum):C(jump_test, Sum)",3.0584717375592846e-05
+"C(model, Sum):C(jump_test, Sum)",0.00013855980223660607

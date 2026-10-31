@@ -1,0 +1,102 @@
+{
+  "run_id": "run_v3",
+  "created_at": "2026-09-20T22:53:34.045244+00:00",
+  "argv": [
+    "C:\\Users\\nikol\\Kristina\\-Projekat_Diplomski_Rad\\scripts\\run_econometric.py",
+    "--panel",
+    "data/processed/v3/panel.parquet",
+    "--models",
+    "fast",
+    "--run-dir",
+    "results\\run_v3",
+    "--shard",
+    "0/18"
+  ],
+  "git_sha": "f6939e61724729193e0edba9e0796c5c2404db99",
+  "symbols": [
+    "AAPL",
+    "ACN",
+    "AEM",
+    "AMAT",
+    "AMD",
+    "AMZN",
+    "BAC",
+    "C",
+    "CB",
+    "CSCO",
+    "CVX",
+    "DIS",
+    "F",
+    "INTC",
+    "JPM",
+    "MS",
+    "MSFT",
+    "MU",
+    "NFLX",
+    "ORCL",
+    "PFE",
+    "QCOM",
+    "SU",
+    "T",
+    "VZ",
+    "WFC",
+    "WMT",
+    "XOM"
+  ],
+  "models": [
+    "naive",
+    "har",
+    "log_har",
+    "shar",
+    "harq",
+    "har_iv",
+    "char",
+    "har_j",
+    "lightgbm",
+    "xgboost",
+    "ttm_rv",
+    "ttm_c",
+    "ttm_c_plus_j",
+    "log_har_ttm",
+    "arfima",
+    "mem"
+  ],
+  "grids": [
+    "15m",
+    "1m",
+    "5m"
+  ],
+  "horizons": [
+    1,
+    5,
+    22
+  ],
+  "scheme": {
+    "sample_start": "2010-01-01",
+    "first_forecast_date": "2014-01-01",
+    "eval_start": "2015-01-01",
+    "eval_end": "2025-12-31",
+    "refit_every_sessions": 21,
+    "correction_window_sessions": 252,
+    "patchtst_seeds": [
+      0,
+      1,
+      2
+    ],
+    "regime_grid": "5m"
+  },
+  "panel_path": "C:\\Users\\nikol\\Kristina\\-Projekat_Diplomski_Rad\\data\\processed\\v3\\panel.parquet",
+  "panel_sha256": "5ad095f845cdec3350f217bfc25a7fa0e25cc5b2d9b4dc7c9b9fb2f2021c2605",
+  "python": "3.13.15",
+  "packages": {
+    "numpy": "2.5.3",
+    "pandas": "2.3.3",
+    "statsmodels": "0.15.0",
+    "scipy": "1.18.1",
+    "pyarrow": "25.0.1",
+    "lightgbm": "4.7.0",
+    "xgboost": "3.4.1",
+    "torch": "2.11.0+cu128"
+  },
+  "notes": "written by shard 0 of 18"
+}

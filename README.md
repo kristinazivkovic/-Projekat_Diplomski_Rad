@@ -12,7 +12,7 @@ dolazi od modela, a koliki od merenja.
 ## Podaci
 
 - Jednominutni barovi za **28 likvidnih američkih akcija**, 2010–2025.
-- VIX sa FRED-a, za opis tržišnih režima.
+- VIX sa FRED-a, sa pomakom od jednog dana, kao ulaz modela HAR-IV, LightGBM i XGBoost.
 - Dve akcije su isključene posle provere kvaliteta podataka:
   - **MT** — unutar istog dana mešaju se cene prilagođene i neprilagođene za split.
   - **NVDA** — posle prilagođavanja za split cena je u 2014–2016. bila oko 0,46 USD,
@@ -80,30 +80,88 @@ Ocena ima četiri nivoa.
 
 ## Glavni rezultati
 
-Rezultati su iz pokretanja `run_v3`: 246 kombinacija, bez ijednog neuspeha.
+Rezultati su iz pokretanja `run_v3`: 246 kombinacija, bez ijednog neuspeha. Ocena
+obuhvata 2015–2025, oko 76.700 parova akcija i dana po kombinaciji.
 
-- **QLIKE, h = 1, dizajn 5m/BPV/BNS:**
-  - Najbolji su LightGBM (0,155) i XGBoost (0,156).
-  - HAR familija je zbijena između 0,161 i 0,163 (log-HAR 0,162).
-  - Slede HAR na nivoima (0,171), naivni model (0,192) i MEM (0,204).
-- **Udeo varijanse (ANOVA, h = 1):** sirovi QLIKE je previše asimetričan da bi išta
-  razlučio. Zato čitanje daju log i rang varijante:
+| Hipoteza | Ishod | Ukratko |
+|---|---|---|
+| H1 — dizajn merenja je ravnopravan izboru modela | delimično potvrđena | Mreža ima veliki udeo, ali je to gornja granica. Estimator i test skokova malo utiču. |
+| H2 — informacija o skokovima poboljšava prognozu | nije potvrđena | Signal postoji, ali je mali i njegov znak zavisi od dizajna. |
+| H3 — poredak modela se menja pri ekonomskoj oceni | potvrđena | Poredak po QLIKE i po VaR gubitku se slabo slaže. |
 
-  | Varijanta | Model | Mreža |
-  |---|---|---|
-  | log(QLIKE) | 0,058 | 0,020 |
-  | Rangovi unutar dana | 0,110 | 0,061 |
+### Tačnost
 
-  Merenje, sa interakcijama, nosi oko 36–58% udela koji nosi model. Gotovo ceo
-  doprinos merenja dolazi od **mreže uzorkovanja**. Izbor estimatora i testa
-  skokova malo utiče.
-- **Skokovi:**
-  - Prema Diebold–Mariano testu, HAR-J i CHAR se ne razlikuju značajno od log-HAR-a.
-  - Placebo test pokazuje da njihova mala prednost ipak potiče od stvarnih dana sa
-    skokom (p ≈ 0,01–0,02).
-  - Zaključak: signal postoji, ali je mali.
-- **TTM modeli:** 81,9% dana u periodu ocene prethodi kraju njihovog pretreniranja.
-  Zato su u analizi zadržani, ali označeni kao kontaminirani.
+Prosečan QLIKE na referentnom dizajnu 5m/BPV/BNS (manje je bolje):
+
+| Model | h = 1 | h = 5 | h = 22 |
+|---|---|---|---|
+| LightGBM | **0,155** | 0,132 | 0,203 |
+| XGBoost | 0,156 | **0,131** | 0,203 |
+| ARFIMA | 0,161 | 0,136 | 0,220 |
+| log-HAR (osnova za poređenje) | 0,162 | 0,133 | 0,197 |
+| HAR-J | 0,162 | 0,133 | 0,197 |
+| CHAR | 0,162 | 0,133 | 0,197 |
+| HAR na nivoima | 0,171 | 0,142 | **0,179** |
+| TTM-RV | 0,175 | 0,150 | 0,218 |
+| naivni | 0,192 | 0,182 | 0,260 |
+| MEM | 0,204 | 0,170 | 0,238 |
+
+- **Najbolji model zavisi od horizonta.** Stabla odlučivanja značajno pobeđuju log-HAR
+  samo na h = 1 (LightGBM je 4,5% bolji, DM p < 0,001). Na h = 5 i h = 22 ta razlika
+  nije značajna.
+- **HAR na nivoima ide suprotnim smerom.** Na h = 1 i h = 5 značajno je lošiji od
+  log-HAR-a. Na h = 22 je najbolji (9% niži QLIKE), ali ta razlika ne prolazi test
+  (p = 0,10).
+
+### Razlaganje varijanse
+
+Sirovi QLIKE je previše asimetričan i na h = 1 svi udeli su oko 1e-5. Zato čitanje
+daju log i rang varijante. Tabela prikazuje parcijalni η² za modele osetljive na dizajn:
+
+| Faktor | log, h = 1 | log, h = 5 | log, h = 22 | rangovi, h = 1 | rangovi, h = 5 | rangovi, h = 22 |
+|---|---|---|---|---|---|---|
+| Model | 0,058 | 0,085 | 0,066 | 0,110 | 0,137 | 0,105 |
+| Mreža | 0,020 | 0,006 | 0,002 | 0,061 | 0,029 | 0,013 |
+| Estimator | 0,001 | 0,001 | 0,001 | 0,002 | 0,002 | 0,001 |
+| Test skokova | < 0,001 | < 0,001 | 0,001 | < 0,001 | 0,001 | 0,001 |
+
+- **Gotovo ceo efekat merenja dolazi od mreže uzorkovanja** i slabi sa horizontom. Među
+  modelima koji zavise samo od mreže ona prevazilazi i izbor modela (h = 1: 0,025 prema
+  0,001 u log varijanti).
+- **Udeo mreže je gornja granica.** Mreža menja i RV prema kome se gubitak ocenjuje, pa
+  deo njenog udela odražava težinu samog cilja. Kada se poređenje ograniči na isti cilj,
+  čist efekat dizajna na h = 1 iznosi samo **0,001** (log) i **0,003** (rangovi).
+- **Udeo modela zavisi od skupa modela.** Veliki deo nosi jedan loš model, TTM-C+J. Čist
+  efekat dizajna je 0,019–0,024 udela modela sa njim, a 0,31–0,43 bez njega.
+
+### Skokovi
+
+- **Diebold–Mariano:** na referentnom dizajnu HAR-J i CHAR se ne razlikuju značajno od
+  log-HAR-a ni na jednom horizontu. Preko svih dizajna značajni nalazi idu u oba smera,
+  a na h = 1 ih je čak više u korist log-HAR-a (25 prema 19).
+- **Placebo test:** prednost na 5-minutnoj mreži potiče od stvarnih dana sa skokom
+  (p ≈ 0,01–0,02 za BNS, LM i LM-FDR). Izuzetak je naivni test, gde je HAR-J lošiji od
+  log-HAR-a (p = 1,0).
+- **Udeo dana sa skokom jako zavisi od dizajna.** LM označava 9% dana na 15m, a 51% na
+  1m. LM-FDR označava više dana od LM-a (39% prema 20% na 5m), pa **nije**
+  konzervativnija varijanta.
+
+### Ekonomska ocena
+
+- VaR 1% **odbacuje se Kupiec testom za svih 246 kombinacija**. Stopa probijanja je
+  1,2–3,7% (medijana 1,5%), pa prognoza uz pretpostavku normalnosti potcenjuje rizik.
+- Kendallov τ između poretka po QLIKE i po Lopez gubitku iznosi 0,30 na proseku preko
+  dizajna (p = 0,12). Slaganje je slabo i ne može se statistički razlikovati od nule.
+- HAR na nivoima je 11. od 16 po QLIKE na h = 1, a prvi po Lopez gubitku.
+
+### Ograničenja
+
+- **TTM modeli:** 81,9% dana u periodu ocene (2.264 od 2.766) prethodi kraju njihovog
+  pretreniranja, pa su zadržani u analizi, ali označeni kao kontaminirani. Čisto je samo
+  razdoblje 2024–2025.
+- **Skup najboljih modela** je sekvencijalna eliminacija u duhu Model Confidence Set-a,
+  a ne bootstrap procedura Hansena, Lundea i Nasona.
+- **VaR** obuhvata samo unutardnevni prinos, bez noćnog gepa.
 
 ## Struktura koda
 
@@ -144,5 +202,10 @@ Ceo lanac (koraci 2–5) pokreće se jednom komandom, sa nastavkom posle prekida
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run_all.ps1
 ```
 
-Podaci (`data/`) i rezultati (`results/`) nisu u repozitorijumu. Mogu se ponovo
+Rezultati izveštenog pokretanja nalaze se u [`results/run_v3/report/`](results/run_v3/report/):
+tabele za sva četiri nivoa ocene, a pored njih `results/run_v3/manifest.json` sa verzijom
+koda, heš vrednošću panela i verzijama paketa.
+
+Podaci (`data/`), pojedinačne prognoze (`results/run_v3/tables/`, 4,2 GB) i dnevni gubici
+(`daily_losses_h*.parquet`, po 1,3 GB) nisu u repozitorijumu zbog veličine. Mogu se ponovo
 izgraditi iz vaulta i sa FRED-a. Celo pokretanje traje oko 9,5 sati.

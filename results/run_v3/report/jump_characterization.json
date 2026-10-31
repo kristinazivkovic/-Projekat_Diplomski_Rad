@@ -1,0 +1,218 @@
+[
+  {
+    "design_id": "15m__bpv__bns",
+    "jump_day_share": 0.05489743107601114,
+    "mean_jump_size": 0.00018853204094782737,
+    "j_share_of_rv": 0.0410103370808996
+  },
+  {
+    "design_id": "15m__bpv__lm",
+    "jump_day_share": 0.09331041090248117,
+    "mean_jump_size": 0.00017505051934620103,
+    "j_share_of_rv": 0.06472166084168358
+  },
+  {
+    "design_id": "15m__bpv__lm_fdr",
+    "jump_day_share": 0.17446118856385598,
+    "mean_jump_size": 0.00012495275403823293,
+    "j_share_of_rv": 0.08637753524198016
+  },
+  {
+    "design_id": "15m__bpv__naive",
+    "jump_day_share": 0.0035279053733401383,
+    "mean_jump_size": 0.0002546004788376163,
+    "j_share_of_rv": 0.0035590352690741674
+  },
+  {
+    "design_id": "15m__medrv__bns",
+    "jump_day_share": 0.02027202478487836,
+    "mean_jump_size": 0.0002225242739380287,
+    "j_share_of_rv": 0.01787436693038921
+  },
+  {
+    "design_id": "15m__medrv__lm",
+    "jump_day_share": 0.09331041090248117,
+    "mean_jump_size": 0.00024316310795179932,
+    "j_share_of_rv": 0.08990501862459967
+  },
+  {
+    "design_id": "15m__medrv__lm_fdr",
+    "jump_day_share": 0.17446118856385598,
+    "mean_jump_size": 0.0001739303155619431,
+    "j_share_of_rv": 0.12023482057469127
+  },
+  {
+    "design_id": "15m__medrv__naive",
+    "jump_day_share": 0.00664392331730554,
+    "mean_jump_size": 0.00024562557971801135,
+    "j_share_of_rv": 0.00646627769998275
+  },
+  {
+    "design_id": "15m__trbpv__bns__t3",
+    "jump_day_share": 0.04393764382482249,
+    "mean_jump_size": 0.00019973739800471126,
+    "j_share_of_rv": 0.03477381183647208
+  },
+  {
+    "design_id": "15m__trbpv__lm__t3",
+    "jump_day_share": 0.09333727312613604,
+    "mean_jump_size": 0.0004037600311649565,
+    "j_share_of_rv": 0.1493257077345084
+  },
+  {
+    "design_id": "15m__trbpv__lm_fdr__t3",
+    "jump_day_share": 0.17448805078751087,
+    "mean_jump_size": 0.0002961755402341909,
+    "j_share_of_rv": 0.2047722151158831
+  },
+  {
+    "design_id": "15m__trbpv__naive__t3",
+    "jump_day_share": 0.03145566389985763,
+    "mean_jump_size": 0.0003001950080116447,
+    "j_share_of_rv": 0.03741609586626656
+  },
+  {
+    "design_id": "1m__bpv__bns",
+    "jump_day_share": 0.18542097581504463,
+    "mean_jump_size": 8.594300188756674e-05,
+    "j_share_of_rv": 0.055394052966742865
+  },
+  {
+    "design_id": "1m__bpv__lm",
+    "jump_day_share": 0.511071713183084,
+    "mean_jump_size": 3.6171859319801714e-05,
+    "j_share_of_rv": 0.06426084588565237
+  },
+  {
+    "design_id": "1m__bpv__lm_fdr",
+    "jump_day_share": 0.7744558161191251,
+    "mean_jump_size": 3.240269578268683e-05,
+    "j_share_of_rv": 0.08723114029351661
+  },
+  {
+    "design_id": "1m__bpv__naive",
+    "jump_day_share": 0.0017908149103249434,
+    "mean_jump_size": 0.00012280810149950877,
+    "j_share_of_rv": 0.0007644894208026601
+  },
+  {
+    "design_id": "1m__medrv__bns",
+    "jump_day_share": 0.03159892909268362,
+    "mean_jump_size": 7.805832106088959e-05,
+    "j_share_of_rv": 0.008574036557279662
+  },
+  {
+    "design_id": "1m__medrv__lm",
+    "jump_day_share": 0.511071713183084,
+    "mean_jump_size": 2.7824748662105956e-05,
+    "j_share_of_rv": 0.04943184893467082
+  },
+  {
+    "design_id": "1m__medrv__lm_fdr",
+    "jump_day_share": 0.7744558161191251,
+    "mean_jump_size": 2.2091172307911153e-05,
+    "j_share_of_rv": 0.05947153791658557
+  },
+  {
+    "design_id": "1m__medrv__naive",
+    "jump_day_share": 0.001647549717498948,
+    "mean_jump_size": 0.0002879811072863187,
+    "j_share_of_rv": 0.0016492871939667807
+  },
+  {
+    "design_id": "1m__trbpv__bns__t3",
+    "jump_day_share": 0.7990974292851962,
+    "mean_jump_size": 0.00011089441729481056,
+    "j_share_of_rv": 0.30803720730335726
+  },
+  {
+    "design_id": "1m__trbpv__lm__t3",
+    "jump_day_share": 0.5110896213321872,
+    "mean_jump_size": 0.0001458879429019593,
+    "j_share_of_rv": 0.2591852144507414
+  },
+  {
+    "design_id": "1m__trbpv__lm_fdr__t3",
+    "jump_day_share": 0.7744737242682282,
+    "mean_jump_size": 0.000126113889828706,
+    "j_share_of_rv": 0.339518442343493
+  },
+  {
+    "design_id": "1m__trbpv__naive__t3",
+    "jump_day_share": 0.01630536975850861,
+    "mean_jump_size": 0.0002529925423543396,
+    "j_share_of_rv": 0.014339438040916573
+  },
+  {
+    "design_id": "5m__bpv__bns",
+    "jump_day_share": 0.052381336127004595,
+    "mean_jump_size": 0.00012361061049715887,
+    "j_share_of_rv": 0.02505032218245621
+  },
+  {
+    "design_id": "5m__bpv__lm",
+    "jump_day_share": 0.19932665359371782,
+    "mean_jump_size": 6.379255480031177e-05,
+    "j_share_of_rv": 0.04919447877022357
+  },
+  {
+    "design_id": "5m__bpv__lm_fdr",
+    "jump_day_share": 0.3872368621341141,
+    "mean_jump_size": 4.5819835192002834e-05,
+    "j_share_of_rv": 0.0686453632439749
+  },
+  {
+    "design_id": "5m__bpv__naive",
+    "jump_day_share": 0.0021400238178383075,
+    "mean_jump_size": 0.0001901558685963614,
+    "j_share_of_rv": 0.0015743791606071874
+  },
+  {
+    "design_id": "5m__medrv__bns",
+    "jump_day_share": 0.02230459970809717,
+    "mean_jump_size": 0.00015175369562430262,
+    "j_share_of_rv": 0.013095277385552504
+  },
+  {
+    "design_id": "5m__medrv__lm",
+    "jump_day_share": 0.19932665359371782,
+    "mean_jump_size": 8.636038405137938e-05,
+    "j_share_of_rv": 0.06659796104894632
+  },
+  {
+    "design_id": "5m__medrv__lm_fdr",
+    "jump_day_share": 0.3872368621341141,
+    "mean_jump_size": 6.0333226599616105e-05,
+    "j_share_of_rv": 0.09038872004355332
+  },
+  {
+    "design_id": "5m__medrv__naive",
+    "jump_day_share": 0.0027399468127971634,
+    "mean_jump_size": 0.0002233860646959964,
+    "j_share_of_rv": 0.0023679863920166703
+  },
+  {
+    "design_id": "5m__trbpv__bns__t3",
+    "jump_day_share": 0.11019779550684539,
+    "mean_jump_size": 0.00012730277518681546,
+    "j_share_of_rv": 0.05427399250868539
+  },
+  {
+    "design_id": "5m__trbpv__lm__t3",
+    "jump_day_share": 0.19932665359371782,
+    "mean_jump_size": 0.00022280853075409195,
+    "j_share_of_rv": 0.17182176776455602
+  },
+  {
+    "design_id": "5m__trbpv__lm_fdr__t3",
+    "jump_day_share": 0.3872368621341141,
+    "mean_jump_size": 0.0001651869735541842,
+    "j_share_of_rv": 0.24747622411306622
+  },
+  {
+    "design_id": "5m__trbpv__naive__t3",
+    "jump_day_share": 0.018839372856618405,
+    "mean_jump_size": 0.00026258078108328865,
+    "j_share_of_rv": 0.019138608993535925
+  }
+]

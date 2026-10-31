@@ -1,0 +1,10 @@
+frequency,refit_every_sessions,model,design_id,horizon,mean_qlike,n_obs
+annual,252,log_har,5m__bpv__bns,1,0.16242634721681928,76748
+annual,252,har_j,5m__bpv__bns,1,0.16228865753999802,76748
+annual,252,char,5m__bpv__bns,1,0.16236268965853512,76748
+monthly,21,log_har,5m__bpv__bns,1,0.16241152353202545,76748
+monthly,21,har_j,5m__bpv__bns,1,0.16226543108864772,76748
+monthly,21,char,5m__bpv__bns,1,0.16233928887150054,76748
+daily,1,log_har,5m__bpv__bns,1,0.16231360978255457,76748
+daily,1,har_j,5m__bpv__bns,1,0.16216856300261803,76748
+daily,1,char,5m__bpv__bns,1,0.162238944242989,76748
