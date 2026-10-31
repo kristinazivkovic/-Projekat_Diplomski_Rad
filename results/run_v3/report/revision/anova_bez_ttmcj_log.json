@@ -1,0 +1,12 @@
+{
+  "model": 0.00158432476964514,
+  "merenje_ukupno": 0.023535584906316027,
+  "merenje_bez_mreze": 0.0006826325135775847,
+  "odnos_merenje": 14.855278006912416,
+  "odnos_bez_mreze": 0.4308665285404091,
+  "n_obs": 13814640,
+  "n_models": 5,
+  "variant": "log",
+  "subset": "bez_ttm_c_plus_j",
+  "horizon": 1
+}

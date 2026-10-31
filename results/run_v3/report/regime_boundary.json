@@ -1,0 +1,10 @@
+{
+  "grid": "5m",
+  "quantile": 0.5,
+  "threshold": 0.000169772526426766,
+  "first_training_period_end": "2014-01-01",
+  "n_rows": 27345,
+  "n_symbols": 28,
+  "date_min": "2010-02-03",
+  "date_max": "2013-12-31"
+}

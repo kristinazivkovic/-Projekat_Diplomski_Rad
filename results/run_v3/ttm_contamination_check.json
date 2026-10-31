@@ -1,0 +1,15 @@
+{
+  "model_id": "ibm-granite/granite-timeseries-ttm-r2",
+  "revision": "512-192-r2",
+  "pretrain_cutoff": "2024-01-01",
+  "test_start": "2015-01-01",
+  "test_end": "2025-12-31",
+  "contaminated": true,
+  "overlap_start": "2015-01-02",
+  "overlap_end": "2023-12-29",
+  "overlap_days": 2264,
+  "test_days": 2766,
+  "overlap_share_of_test": 0.8185104844540854,
+  "day_unit": "XNYS trading sessions",
+  "note": "CONTAMINATED: 2264 of 2766 test trading days (81.9%) fall before the pinned checkpoint's pretraining cutoff 2024-01-01. The model is KEPT IN the analysis and must be reported labelled as contaminated over this period."
+}

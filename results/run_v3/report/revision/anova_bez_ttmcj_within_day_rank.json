@@ -1,0 +1,12 @@
+{
+  "model": 0.006898480621814101,
+  "merenje_ukupno": 0.0827172628330238,
+  "merenje_bez_mreze": 0.002103684460498048,
+  "odnos_merenje": 11.990649444090423,
+  "odnos_bez_mreze": 0.3049489555491191,
+  "n_obs": 13814640,
+  "n_models": 5,
+  "variant": "within_day_rank",
+  "subset": "bez_ttm_c_plus_j",
+  "horizon": 1
+}
